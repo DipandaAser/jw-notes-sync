@@ -154,7 +154,7 @@ describe('mergeInputFields', () => {
     expect(merged[0]!.Value).toBe('[Windows PC] Val A | [Google Pixel 6a] Val B');
   });
 
-  it('should handle empty string values', () => {
+  it('should keep non-empty value when A is empty', () => {
     const { idMapA, idMapB } = setupMaps();
     const fieldsA = [makeField({ LocationId: 1, TextTag: 'q1', Value: '' })];
     const fieldsB = [makeField({ LocationId: 1, TextTag: 'q1', Value: 'Filled in' })];
@@ -162,7 +162,17 @@ describe('mergeInputFields', () => {
     const merged = mergeInputFields(fieldsA, fieldsB, idMapA, idMapB, defaultOptions);
 
     expect(merged).toHaveLength(1);
-    // Empty vs filled → conflict, concatenate
-    expect(merged[0]!.Value).toBe('[Pixel 6a]  | [iPad Air] Filled in');
+    expect(merged[0]!.Value).toBe('Filled in');
+  });
+
+  it('should keep non-empty value when B is empty', () => {
+    const { idMapA, idMapB } = setupMaps();
+    const fieldsA = [makeField({ LocationId: 1, TextTag: 'q1', Value: 'Filled in' })];
+    const fieldsB = [makeField({ LocationId: 1, TextTag: 'q1', Value: '' })];
+
+    const merged = mergeInputFields(fieldsA, fieldsB, idMapA, idMapB, defaultOptions);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0]!.Value).toBe('Filled in');
   });
 });

@@ -56,9 +56,16 @@ export function mergeInputFields(
 
     if (existing) {
       if (existing.Value !== remapped.Value) {
-        // Conflict — concatenate both values
-        existing.Value =
-          `[${options.deviceNameA}] ${existing.Value} | [${options.deviceNameB}] ${remapped.Value}`;
+        if (!existing.Value) {
+          // A is empty — keep B's value
+          existing.Value = remapped.Value;
+        } else if (!remapped.Value) {
+          // B is empty — keep A's value (already in merged)
+        } else {
+          // Both non-empty — concatenate with device labels
+          existing.Value =
+            `[${options.deviceNameA}] ${existing.Value} | [${options.deviceNameB}] ${remapped.Value}`;
+        }
       }
       // Identical values → already in merged, skip
     } else {
