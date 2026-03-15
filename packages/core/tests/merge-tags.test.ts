@@ -237,6 +237,28 @@ describe('mergeTagMaps', () => {
     expect(idMapA.getCounter('TagMap')).toBe(3);
   });
 
+  it('should populate ID mappings for both sources', () => {
+    const { idMapA, idMapB } = setupWithTags();
+    const tmA = [makeTagMap({ TagMapId: 5, TagId: 1, NoteId: 1 })];
+    const tmB = [makeTagMap({ TagMapId: 15, TagId: 10, NoteId: 10 })];
+
+    mergeTagMaps(tmA, tmB, idMapA, idMapB);
+
+    expect(idMapA.get('TagMap', 5)).toBe(1);
+    expect(idMapB.get('TagMap', 15)).toBe(2);
+  });
+
+  it('should map duplicate B tagmap to existing A tagmap ID', () => {
+    const { idMapA, idMapB } = setupWithTags();
+    // Both map to TagId=1, NoteId=1 after remapping
+    const tmA = [makeTagMap({ TagMapId: 1, TagId: 1, NoteId: 1 })];
+    const tmB = [makeTagMap({ TagMapId: 10, TagId: 1, NoteId: 1 })];
+
+    mergeTagMaps(tmA, tmB, idMapA, idMapB);
+
+    expect(idMapA.get('TagMap', 1)).toBe(idMapB.get('TagMap', 10));
+  });
+
   it('should handle PlaylistItemId remapping', () => {
     const { idMapA, idMapB } = setupWithTags();
     idMapA.set('PlaylistItem', 1, 1);

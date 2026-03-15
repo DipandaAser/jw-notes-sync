@@ -85,8 +85,10 @@ export function mergeTagMaps(
   const TABLE = 'TagMap';
 
   // Collect all remapped entries, deduplicating
-  const seen = new Set<string>();
+  const seen = new Map<string, number>(); // dedup key → index in deduped
   const deduped: TagMap[] = [];
+  // Track original IDs and their idMaps for later mapping
+  const origins: { oldId: number; idMap: IdMap }[][] = [];
 
   function processEntry(tm: TagMap, idMap: IdMap): void {
     const remapped: TagMap = {
@@ -101,9 +103,15 @@ export function mergeTagMaps(
     };
 
     const key = tagMapDedupeKey(remapped);
-    if (!seen.has(key)) {
-      seen.add(key);
+    const existingIdx = seen.get(key);
+    if (existingIdx !== undefined) {
+      // Duplicate — track origin so we can map old ID later
+      origins[existingIdx]!.push({ oldId: tm.TagMapId, idMap });
+    } else {
+      const idx = deduped.length;
+      seen.set(key, idx);
       deduped.push(remapped);
+      origins.push([{ oldId: tm.TagMapId, idMap }]);
     }
   }
 
@@ -119,12 +127,18 @@ export function mergeTagMaps(
   const merged: TagMap[] = [];
   let nextId = 1;
 
-  for (const tm of deduped) {
+  for (let i = 0; i < deduped.length; i++) {
+    const tm = deduped[i]!;
     const pos = positionByTag.get(tm.TagId) ?? 0;
     positionByTag.set(tm.TagId, pos + 1);
 
     const newId = nextId++;
     merged.push({ ...tm, TagMapId: newId, Position: pos });
+
+    // Map all original IDs (including duplicates) to this new ID
+    for (const origin of origins[i]!) {
+      origin.idMap.set(TABLE, origin.oldId, newId);
+    }
   }
 
   idMapA.setCounter(TABLE, nextId);
