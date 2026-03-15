@@ -1,0 +1,14 @@
+{
+  "name": "jw-notes-sync",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter @jw-notes-sync/web dev",
+    "build": "pnpm --filter @jw-notes-sync/core build && pnpm --filter @jw-notes-sync/web build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "format": "pnpm -r format"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
