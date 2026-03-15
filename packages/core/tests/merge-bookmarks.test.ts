@@ -80,15 +80,28 @@ describe('mergeBookmarks', () => {
     expect(merged[1]!.Slot).toBe(1); // B shifted to next available
   });
 
+  it('should deduplicate identical bookmarks (same pub, slot, title, snippet, location)', () => {
+    const { idMapA, idMapB } = setupMaps();
+    const bmA = [makeBm({ BookmarkId: 1, LocationId: 1, PublicationLocationId: 2, Slot: 0, Title: 'Same BM', Snippet: 'Same snippet' })];
+    const bmB = [makeBm({ BookmarkId: 10, LocationId: 1, PublicationLocationId: 2, Slot: 0, Title: 'Same BM', Snippet: 'Same snippet' })];
+
+    const merged = mergeBookmarks(bmA, bmB, idMapA, idMapB);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0]!.Title).toBe('Same BM');
+    // B's old ID should map to A's new ID
+    expect(idMapB.get('Bookmark', 10)).toBe(idMapA.get('Bookmark', 1));
+  });
+
   it('should handle multiple collisions on same publication', () => {
     const { idMapA, idMapB } = setupMaps();
     const bmA = [
-      makeBm({ BookmarkId: 1, LocationId: 1, PublicationLocationId: 2, Slot: 0 }),
-      makeBm({ BookmarkId: 2, LocationId: 1, PublicationLocationId: 2, Slot: 1 }),
+      makeBm({ BookmarkId: 1, LocationId: 1, PublicationLocationId: 2, Slot: 0, Title: 'A first' }),
+      makeBm({ BookmarkId: 2, LocationId: 1, PublicationLocationId: 2, Slot: 1, Title: 'A second' }),
     ];
     const bmB = [
-      makeBm({ BookmarkId: 10, LocationId: 1, PublicationLocationId: 2, Slot: 0 }),
-      makeBm({ BookmarkId: 11, LocationId: 1, PublicationLocationId: 2, Slot: 1 }),
+      makeBm({ BookmarkId: 10, LocationId: 1, PublicationLocationId: 2, Slot: 0, Title: 'B first' }),
+      makeBm({ BookmarkId: 11, LocationId: 1, PublicationLocationId: 2, Slot: 1, Title: 'B second' }),
     ];
 
     const merged = mergeBookmarks(bmA, bmB, idMapA, idMapB);

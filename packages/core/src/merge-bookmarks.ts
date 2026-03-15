@@ -62,18 +62,32 @@ export function mergeBookmarks(
     idMapA.set(TABLE, bm.BookmarkId, newId);
   }
 
-  // Process B bookmarks — shift slot on collision
+  // Process B bookmarks — deduplicate identical, shift slot on collision
   for (const bm of bookmarksB) {
-    const newId = nextId++;
     const newLocId = idMapB.get('Location', bm.LocationId);
     const newPubLocId = idMapB.get('Location', bm.PublicationLocationId);
 
     let slot = bm.Slot;
     const slots = slotsByPub.get(newPubLocId);
     if (slots?.has(slot)) {
+      // Check if it's actually the same bookmark (identical content)
+      const existing = merged.find(
+        (b) =>
+          b.PublicationLocationId === newPubLocId &&
+          b.Slot === slot &&
+          b.Title === bm.Title &&
+          b.Snippet === bm.Snippet &&
+          b.LocationId === newLocId,
+      );
+      if (existing) {
+        // Deduplicate — map B's old ID to the existing entry
+        idMapB.set(TABLE, bm.BookmarkId, existing.BookmarkId);
+        continue;
+      }
       slot = nextAvailableSlot(newPubLocId);
     }
 
+    const newId = nextId++;
     merged.push({
       ...bm,
       BookmarkId: newId,
