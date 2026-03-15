@@ -41,6 +41,10 @@ export interface MergeNotesOptions {
 /**
  * Merge Note tables from two databases.
  *
+ * **Merge order: 3** — depends on Location (step 1) and UserMark (step 2).
+ * Both `Location` and `UserMark` mappings must exist in idMapA/idMapB before calling.
+ * Populates `Note` mappings used by TagMap (step 7).
+ *
  * Strategy:
  * - Match by Guid
  * - Identical content → keep one, remap FKs from A

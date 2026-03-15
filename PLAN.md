@@ -75,6 +75,31 @@ export interface PlatformAdapter {
 - [ ] Round-trip test: parse → rebuild → binary-compare
 
 ### 1.4 Merge Engine (`packages/core/merge`)
+
+#### Merge Dependency Order
+
+Tables must be merged in this exact order. Each step populates ID mappings that downstream steps depend on via `IdMap`. Calling a merge function before its dependencies will throw.
+
+```text
+1. Location          (no FK dependencies — root of the merge)
+2. UserMark          (depends on: Location)
+3. Note              (depends on: Location, UserMark)
+4. BlockRange        (depends on: UserMark)
+5. Bookmark          (depends on: Location)
+6. Tag               (no FK dependencies)
+7. TagMap            (depends on: Tag, Note, Location, PlaylistItem)
+8. InputField        (depends on: Location)
+9. IndependentMedia  (no FK dependencies)
+10. PlaylistItem     (depends on: IndependentMedia via ThumbnailFilePath)
+11. PlaylistItemIndependentMediaMap  (depends on: PlaylistItem, IndependentMedia)
+12. PlaylistItemLocationMap          (depends on: PlaylistItem, Location)
+13. PlaylistItemMarker               (depends on: PlaylistItem)
+14. PlaylistItemMarkerBibleVerseMap  (depends on: PlaylistItemMarker)
+15. PlaylistItemMarkerParagraphMap   (depends on: PlaylistItemMarker)
+```
+
+#### Table Merge Strategies
+
 - [ ] **Location deduplication** — match Locations across DBs by natural key (`BookNumber + ChapterNumber + KeySymbol + MepsLanguage + Type`) and remap IDs
 - [ ] **Note merge** — match by `Guid`, keep newer `LastModified` for conflicts, union for unique notes
 - [ ] **UserMark merge** — match by `UserMarkGuid`, keep newer version, remap LocationId
