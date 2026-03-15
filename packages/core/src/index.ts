@@ -57,4 +57,5 @@ export {
   mergePlaylistItemMarkerBibleVerseMaps,
   mergePlaylistItemMarkerParagraphMaps,
 } from './merge-playlists.js';
+export { buildArchive, type BuildArchiveOptions } from './builder.js';
 export { groupBy, buildReverseIndex } from './utils.js';
