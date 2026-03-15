@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+
+@theme {
+	/* JW.org-inspired palette */
+	--color-jw-steel: #4a6da7;
+	--color-jw-steel-dark: #3b5998;
+	--color-jw-steel-darker: #2b4170;
+	--color-jw-header: #36425c;
+	--color-jw-warm: #b07d4f;
+
+	--font-sans: 'Noto Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
