@@ -79,7 +79,7 @@ pnpm --filter @jw-notes-sync/web build
 
 A `.jwlibrary` file is a ZIP archive containing:
 - `manifest.json` — metadata (device name, date, schema version, DB hash)
-- `userData.db` — SQLite database (schema v14) with 18 tables
+- `userData.db` — SQLite database with 18 tables. The parser supports multiple schema versions via a registry (currently v14); new versions are added with a single `registerSchema()` call
 - Media files — images and thumbnails referenced by playlists
 
 ### Key Database Tables

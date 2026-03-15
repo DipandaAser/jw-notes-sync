@@ -45,6 +45,26 @@ export interface PlatformAdapter {
 // apps/mobile/src/adapter.ts  — implements via expo-sqlite + react-native-zip-archive
 ```
 
+### Schema Version Registry
+
+The parser supports multiple `.jwlibrary` schema versions through a central registry. Each version declares its table list, and the parser dynamically loads only those tables:
+
+```typescript
+// packages/core/src/schema.ts
+registerSchema({
+  version: 14,
+  tables: ['Location', 'Note', 'UserMark', ...],
+});
+
+// Adding a future version is a single call:
+registerSchema({
+  version: 15,
+  tables: [...v14 tables, 'NewTable'],
+});
+```
+
+The parser reads the `schemaVersion` from `manifest.json`, looks up the matching `SchemaDefinition`, and rejects archives with unregistered versions. This allows merging archives from different schema versions once both are registered.
+
 ---
 
 ## Phase 1 — Core Merge Engine + Minimal Web UI
@@ -71,7 +91,7 @@ export interface PlatformAdapter {
 - [ ] SQLite database loading via platform adapter
 - [ ] Type-safe table models for all 18 tables (generated from schema)
 - [ ] Media file extraction and cataloging
-- [ ] Schema version validation (currently v14)
+- [ ] Schema version registry — version-aware parser that supports multiple schema versions via a central registry (`registerSchema()`). Each version declares its table list; the parser dynamically loads only the tables defined for that version. Adding support for a new version requires only a single `registerSchema()` call in `schema.ts`.
 - [ ] Round-trip test: parse → rebuild → binary-compare
 
 ### 1.4 Merge Engine (`packages/core/merge`)

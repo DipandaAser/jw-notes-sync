@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { parseJWLibrary, CURRENT_SCHEMA_VERSION } from '../src/index.js';
+import { parseJWLibrary, getSupportedVersions } from '../src/index.js';
 import { nodeAdapter } from './node-adapter.js';
 
 const fixturePath = resolve(__dirname, 'fixtures/sample.jwlibrary');
@@ -19,7 +19,7 @@ describe('parseJWLibrary', () => {
     expect(archive.manifest.type).toBe(0);
     expect(archive.manifest.userDataBackup.deviceName).toBe('Google_Pixel 6a');
     expect(archive.manifest.userDataBackup.databaseName).toBe('userData.db');
-    expect(archive.manifest.userDataBackup.schemaVersion).toBe(CURRENT_SCHEMA_VERSION);
+    expect(getSupportedVersions()).toContain(archive.manifest.userDataBackup.schemaVersion);
   });
 
   it('should load all tables with correct row counts', async () => {
