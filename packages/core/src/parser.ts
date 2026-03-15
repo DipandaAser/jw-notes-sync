@@ -1,26 +1,6 @@
-import type { PlatformAdapter } from './platform.js';
-import type {
-  JWLibraryArchive,
-  Manifest,
-  DatabaseContents,
-  Location,
-  Note,
-  UserMark,
-  BlockRange,
-  Bookmark,
-  Tag,
-  TagMap,
-  InputField,
-  IndependentMedia,
-  PlaylistItem,
-  PlaylistItemAccuracy,
-  PlaylistItemIndependentMediaMap,
-  PlaylistItemLocationMap,
-  PlaylistItemMarker,
-  PlaylistItemMarkerBibleVerseMap,
-  PlaylistItemMarkerParagraphMap,
-} from './models.js';
-import { ManifestSchema, CURRENT_SCHEMA_VERSION } from './schema.js';
+import type { PlatformAdapter, Database } from './platform.js';
+import type { JWLibraryArchive, Manifest, DatabaseContents } from './models.js';
+import { ManifestSchema, getSchemaDefinition, getSupportedVersions } from './schema.js';
 
 const DB_NAME = 'userData.db';
 const MANIFEST_NAME = 'manifest.json';
@@ -43,10 +23,13 @@ export async function parseJWLibrary(
   const manifestJson: unknown = JSON.parse(new TextDecoder().decode(manifestBytes));
   const manifest: Manifest = ManifestSchema.parse(manifestJson);
 
-  // 3. Validate schema version
-  if (manifest.userDataBackup.schemaVersion !== CURRENT_SCHEMA_VERSION) {
+  // 3. Validate schema version against registry
+  const version = manifest.userDataBackup.schemaVersion;
+  const schemaDef = getSchemaDefinition(version);
+  if (!schemaDef) {
+    const supported = getSupportedVersions().join(', ');
     throw new Error(
-      `Unsupported schema version ${manifest.userDataBackup.schemaVersion}. Expected ${CURRENT_SCHEMA_VERSION}.`,
+      `Unsupported schema version ${version}. Supported versions: ${supported}.`,
     );
   }
 
@@ -67,8 +50,8 @@ export async function parseJWLibrary(
   const db = await adapter.openDatabase(dbBytes);
 
   try {
-    // 6. Query all tables
-    const database = await loadDatabase(adapter, db);
+    // 6. Query all tables declared in this schema version
+    const database = await loadDatabase(adapter, db, schemaDef.tables);
 
     // 7. Collect media files
     const mediaFiles = new Map<string, Uint8Array>();
@@ -86,81 +69,71 @@ export async function parseJWLibrary(
 
 // ── Database loading ────────────────────────────────────────
 
+/** Map from table name to the key in DatabaseContents */
+const TABLE_KEY_MAP: Record<string, keyof DatabaseContents> = {
+  Location: 'locations',
+  Note: 'notes',
+  UserMark: 'userMarks',
+  BlockRange: 'blockRanges',
+  Bookmark: 'bookmarks',
+  Tag: 'tags',
+  TagMap: 'tagMaps',
+  InputField: 'inputFields',
+  IndependentMedia: 'independentMedia',
+  PlaylistItem: 'playlistItems',
+  PlaylistItemAccuracy: 'playlistItemAccuracies',
+  PlaylistItemIndependentMediaMap: 'playlistItemIndependentMediaMaps',
+  PlaylistItemLocationMap: 'playlistItemLocationMaps',
+  PlaylistItemMarker: 'playlistItemMarkers',
+  PlaylistItemMarkerBibleVerseMap: 'playlistItemMarkerBibleVerseMaps',
+  PlaylistItemMarkerParagraphMap: 'playlistItemMarkerParagraphMaps',
+};
+
 async function loadDatabase(
   adapter: PlatformAdapter,
-  db: import('./platform.js').Database,
+  db: Database,
+  tables: string[],
 ): Promise<DatabaseContents> {
-  const [
-    locations,
-    notes,
-    userMarks,
-    blockRanges,
-    bookmarks,
-    tags,
-    tagMaps,
-    inputFields,
-    independentMedia,
-    playlistItems,
-    playlistItemAccuracies,
-    playlistItemIndependentMediaMaps,
-    playlistItemLocationMaps,
-    playlistItemMarkers,
-    playlistItemMarkerBibleVerseMaps,
-    playlistItemMarkerParagraphMaps,
-    lastModifiedRows,
-    androidMetadataRows,
-  ] = await Promise.all([
-    queryTable<Location>(adapter, db, 'Location'),
-    queryTable<Note>(adapter, db, 'Note'),
-    queryTable<UserMark>(adapter, db, 'UserMark'),
-    queryTable<BlockRange>(adapter, db, 'BlockRange'),
-    queryTable<Bookmark>(adapter, db, 'Bookmark'),
-    queryTable<Tag>(adapter, db, 'Tag'),
-    queryTable<TagMap>(adapter, db, 'TagMap'),
-    queryTable<InputField>(adapter, db, 'InputField'),
-    queryTable<IndependentMedia>(adapter, db, 'IndependentMedia'),
-    queryTable<PlaylistItem>(adapter, db, 'PlaylistItem'),
-    queryTable<PlaylistItemAccuracy>(adapter, db, 'PlaylistItemAccuracy'),
-    queryTable<PlaylistItemIndependentMediaMap>(adapter, db, 'PlaylistItemIndependentMediaMap'),
-    queryTable<PlaylistItemLocationMap>(adapter, db, 'PlaylistItemLocationMap'),
-    queryTable<PlaylistItemMarker>(adapter, db, 'PlaylistItemMarker'),
-    queryTable<PlaylistItemMarkerBibleVerseMap>(adapter, db, 'PlaylistItemMarkerBibleVerseMap'),
-    queryTable<PlaylistItemMarkerParagraphMap>(adapter, db, 'PlaylistItemMarkerParagraphMap'),
-    adapter.executeQuery(db, 'SELECT LastModified FROM LastModified'),
-    adapter.executeQuery(db, 'SELECT locale FROM android_metadata'),
-  ]);
-
-  const lastModified = (lastModifiedRows[0]?.['LastModified'] as string | undefined) ?? '';
-  const androidMetadata =
-    (androidMetadataRows[0]?.['locale'] as string | undefined) ?? null;
-
-  return {
-    locations,
-    notes,
-    userMarks,
-    blockRanges,
-    bookmarks,
-    tags,
-    tagMaps,
-    inputFields,
-    independentMedia,
-    playlistItems,
-    playlistItemAccuracies,
-    playlistItemIndependentMediaMaps,
-    playlistItemLocationMaps,
-    playlistItemMarkers,
-    playlistItemMarkerBibleVerseMaps,
-    playlistItemMarkerParagraphMaps,
-    lastModified,
-    androidMetadata,
+  const result: DatabaseContents = {
+    locations: [],
+    notes: [],
+    userMarks: [],
+    blockRanges: [],
+    bookmarks: [],
+    tags: [],
+    tagMaps: [],
+    inputFields: [],
+    independentMedia: [],
+    playlistItems: [],
+    playlistItemAccuracies: [],
+    playlistItemIndependentMediaMaps: [],
+    playlistItemLocationMaps: [],
+    playlistItemMarkers: [],
+    playlistItemMarkerBibleVerseMaps: [],
+    playlistItemMarkerParagraphMaps: [],
+    lastModified: '',
+    androidMetadata: null,
   };
-}
 
-async function queryTable<T>(
-  adapter: PlatformAdapter,
-  db: import('./platform.js').Database,
-  tableName: string,
-): Promise<T[]> {
-  const rows = await adapter.executeQuery(db, `SELECT * FROM ${tableName}`);
-  return rows as unknown as T[];
+  // Query all tables in parallel
+  const queries = tables.map(async (table) => {
+    const rows = await adapter.executeQuery(db, `SELECT * FROM ${table}`);
+
+    if (table === 'LastModified') {
+      result.lastModified = (rows[0]?.['LastModified'] as string | undefined) ?? '';
+      return;
+    }
+    if (table === 'android_metadata') {
+      result.androidMetadata = (rows[0]?.['locale'] as string | undefined) ?? null;
+      return;
+    }
+
+    const key = TABLE_KEY_MAP[table];
+    if (key) {
+      (result[key] as unknown[]) = rows;
+    }
+  });
+
+  await Promise.all(queries);
+  return result;
 }
