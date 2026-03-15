@@ -27,6 +27,7 @@ ios/App/Pods/
 
 # Claude
 CLAUDE.md
+.claude/
 
 # OS
 Thumbs.db
