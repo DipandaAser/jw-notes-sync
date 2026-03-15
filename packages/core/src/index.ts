@@ -31,6 +31,14 @@ export {
   type UserDataBackup,
 } from './models.js';
 
-export { ManifestSchema, CURRENT_SCHEMA_VERSION } from './schema.js';
+export {
+  ManifestSchema,
+  type SchemaDefinition,
+  getSchemaDefinition,
+  getSupportedVersions,
+} from './schema.js';
 
 export { parseJWLibrary } from './parser.js';
+
+export { IdMap } from './id-map.js';
+export { mergeLocations, locationNaturalKey } from './merge-locations.js';
