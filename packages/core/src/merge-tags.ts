@@ -98,7 +98,7 @@ export function mergeTagMaps(
       NoteId: tm.NoteId !== null ? idMap.get('Note', tm.NoteId) : null,
       LocationId: tm.LocationId !== null ? idMap.get('Location', tm.LocationId) : null,
       PlaylistItemId:
-        tm.PlaylistItemId !== null ? idMap.get('PlaylistItem', tm.PlaylistItemId) : null,
+        tm.PlaylistItemId !== null ? (idMap.tryGet('PlaylistItem', tm.PlaylistItemId) ?? null) : null,
       Position: 0, // recalculated below
     };
 
