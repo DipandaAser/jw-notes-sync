@@ -18,7 +18,36 @@ MepsLanguage    INTEGER,
 Type            INTEGER NOT NULL,
 Title           TEXT,
 UNIQUE(BookNumber, ChapterNumber, KeySymbol, MepsLanguage, Type),
-UNIQUE(KeySymbol, IssueTagNumber, MepsLanguage, DocumentId, Track, Type))`,
+UNIQUE(KeySymbol, IssueTagNumber, MepsLanguage, DocumentId, Track, Type),
+CHECK ((
+Type = 0 AND ( -- Document or Bible chapter
+(DocumentId IS NOT NULL AND DocumentId != 0)
+OR ( -- Track based. Requires DocumentId or KeySymbol.
+Track IS NOT NULL AND (
+(KeySymbol IS NOT NULL AND (length(KeySymbol) > 0))
+OR (DocumentId IS NOT NULL AND DocumentId != 0)))
+OR ( -- Bible book. Requires KeySymbol.
+BookNumber IS NOT NULL AND BookNumber != 0
+AND KeySymbol IS NOT NULL AND (length(KeySymbol) > 0)
+AND (ChapterNumber IS NULL OR ChapterNumber = 0))
+OR ( -- Bible chapter. Requires KeySymbol and BookNumber.
+ChapterNumber IS NOT NULL AND ChapterNumber != 0
+AND BookNumber IS NOT NULL AND BookNumber != 0
+AND KeySymbol IS NOT NULL AND (length(KeySymbol) > 0))))
+OR Type != 0),
+CHECK((
+Type = 1 -- Bible
+AND (BookNumber IS NULL OR BookNumber = 0)
+AND (ChapterNumber IS NULL OR ChapterNumber = 0)
+AND (DocumentId IS NULL OR DocumentId = 0)
+AND KeySymbol IS NOT NULL AND (length(KeySymbol) > 0)
+AND Track IS NULL)
+OR Type != 1),
+CHECK((
+Type IN (2, 3) -- Mediator audio/video
+AND (BookNumber IS NULL OR BookNumber = 0)
+AND (ChapterNumber IS NULL OR ChapterNumber = 0))
+OR Type NOT IN (2, 3)))`,
 
   `CREATE TABLE UserMark (
 UserMarkId      INTEGER NOT NULL PRIMARY KEY,
@@ -40,6 +69,7 @@ LastModified     TEXT NOT NULL DEFAULT(strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
 Created          TEXT NOT NULL DEFAULT(strftime('%Y-%m-%dT%H:%M:%SZ', 'now')),
 BlockType        INTEGER NOT NULL DEFAULT 0,
 BlockIdentifier  INTEGER,
+CHECK((BlockType = 0 AND BlockIdentifier IS NULL) OR((BlockType BETWEEN 1 AND 2) AND BlockIdentifier IS NOT NULL)),
 FOREIGN KEY(UserMarkId) REFERENCES UserMark(UserMarkId),
 FOREIGN KEY(LocationId) REFERENCES Location(LocationId))`,
 
@@ -50,6 +80,7 @@ Identifier      INTEGER NOT NULL,
 StartToken      INTEGER,
 EndToken        INTEGER,
 UserMarkId      INTEGER NOT NULL,
+CHECK (BlockType BETWEEN 1 AND 2),
 FOREIGN KEY(UserMarkId) REFERENCES UserMark(UserMarkId))`,
 
   `CREATE TABLE Bookmark(
@@ -63,13 +94,16 @@ BlockType               INTEGER NOT NULL DEFAULT 0,
 BlockIdentifier         INTEGER,
 FOREIGN KEY(LocationId) REFERENCES Location(LocationId),
 FOREIGN KEY(PublicationLocationId) REFERENCES Location(LocationId),
-CONSTRAINT PublicationLocationId_Slot UNIQUE (PublicationLocationId, Slot))`,
+CONSTRAINT PublicationLocationId_Slot UNIQUE (PublicationLocationId, Slot),
+CHECK((BlockType = 0 AND BlockIdentifier IS NULL) OR ((BlockType BETWEEN 1 AND 2) AND BlockIdentifier IS NOT NULL)))`,
 
   `CREATE TABLE Tag(
 TagId          INTEGER NOT NULL PRIMARY KEY,
 Type           INTEGER NOT NULL,
 Name           TEXT NOT NULL,
-UNIQUE(Type, Name))`,
+UNIQUE(Type, Name),
+CHECK(length(Name) > 0),
+CHECK(Type IN (0, 1, 2)))`,
 
   `CREATE TABLE TagMap (
 TagMapId          INTEGER NOT NULL PRIMARY KEY,
@@ -84,7 +118,11 @@ FOREIGN KEY(LocationId) REFERENCES Location(LocationId),
 FOREIGN KEY(NoteId) REFERENCES Note(NoteId),
 CONSTRAINT TagId_Position UNIQUE(TagId, Position),
 CONSTRAINT TagId_NoteId UNIQUE(TagId, NoteId),
-CONSTRAINT TagId_LocationId UNIQUE(TagId, LocationId))`,
+CONSTRAINT TagId_LocationId UNIQUE(TagId, LocationId),
+CHECK(
+    (NoteId IS NULL AND LocationId IS NULL AND PlaylistItemId IS NOT NULL) OR
+    (LocationId IS NULL AND PlaylistItemId IS NULL AND NoteId IS NOT NULL) OR
+    (PlaylistItemId IS NULL AND NoteId IS NULL AND LocationId IS NOT NULL)))`,
 
   `CREATE TABLE "InputField"(
 LocationId  INTEGER NOT NULL,
@@ -98,7 +136,11 @@ IndependentMediaId  INTEGER NOT NULL PRIMARY KEY,
 OriginalFilename    TEXT NOT NULL,
 FilePath            TEXT NOT NULL UNIQUE,
 MimeType            TEXT NOT NULL,
-Hash                TEXT NOT NULL)`,
+Hash                TEXT NOT NULL,
+CHECK(length(OriginalFilename) > 0),
+CHECK(length(FilePath) > 0),
+CHECK(length(MimeType) > 0),
+CHECK(length(Hash) > 0))`,
 
   `CREATE TABLE PlaylistItemAccuracy(
 PlaylistItemAccuracyId  INTEGER NOT NULL PRIMARY KEY,
@@ -113,7 +155,9 @@ Accuracy                 INTEGER NOT NULL,
 EndAction                INTEGER NOT NULL,
 ThumbnailFilePath        TEXT,
 FOREIGN KEY(Accuracy) REFERENCES PlaylistItemAccuracy(PlaylistItemAccuracyId),
-FOREIGN KEY(ThumbnailFilePath) REFERENCES IndependentMedia(FilePath))`,
+FOREIGN KEY(ThumbnailFilePath) REFERENCES IndependentMedia(FilePath),
+CHECK(length(Label) > 0),
+CHECK(EndAction IN(0, 1, 2, 3)))`,
 
   `CREATE TABLE PlaylistItemIndependentMediaMap(
 PlaylistItemId      INTEGER NOT NULL,
@@ -218,7 +262,8 @@ export async function buildArchive(
       await adapter.executeRun(db, ddl);
     }
 
-    // 2. Insert data in dependency order
+    // 2. Insert data in dependency order (single transaction for performance)
+    await adapter.executeRun(db, 'BEGIN TRANSACTION');
     await insertRows(adapter, db, 'Location', [
       'LocationId', 'BookNumber', 'ChapterNumber', 'DocumentId', 'Track',
       'IssueTagNumber', 'KeySymbol', 'MepsLanguage', 'Type', 'Title',
@@ -301,6 +346,7 @@ export async function buildArchive(
       'INSERT INTO android_metadata (locale) VALUES (?)',
       [contents.androidMetadata ?? 'en_US'],
     );
+    await adapter.executeRun(db, 'COMMIT');
 
     // 3. Validate FK constraints
     await adapter.executeRun(db, 'PRAGMA foreign_keys = ON');
