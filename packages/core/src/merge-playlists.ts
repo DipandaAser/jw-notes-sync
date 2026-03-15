@@ -128,21 +128,17 @@ export function mergePlaylistItems(
 
   for (const item of itemsA) {
     const newId = nextId++;
-    merged.push({
-      ...item,
-      PlaylistItemId: newId,
-      Accuracy: idMapA.get('PlaylistItemAccuracy', item.Accuracy),
-    });
+    const accuracy = idMapA.tryGet('PlaylistItemAccuracy', item.Accuracy);
+    if (accuracy === undefined) continue; // orphaned row — skip
+    merged.push({ ...item, PlaylistItemId: newId, Accuracy: accuracy });
     idMapA.set(TABLE, item.PlaylistItemId, newId);
   }
 
   for (const item of itemsB) {
     const newId = nextId++;
-    merged.push({
-      ...item,
-      PlaylistItemId: newId,
-      Accuracy: idMapB.get('PlaylistItemAccuracy', item.Accuracy),
-    });
+    const accuracy = idMapB.tryGet('PlaylistItemAccuracy', item.Accuracy);
+    if (accuracy === undefined) continue; // orphaned row — skip
+    merged.push({ ...item, PlaylistItemId: newId, Accuracy: accuracy });
     idMapB.set(TABLE, item.PlaylistItemId, newId);
   }
 
@@ -173,22 +169,18 @@ export function mergePlaylistItemMarkers(
   let nextId = 1;
 
   for (const m of markersA) {
+    const parentId = idMapA.tryGet('PlaylistItem', m.PlaylistItemId);
+    if (parentId === undefined) continue;
     const newId = nextId++;
-    merged.push({
-      ...m,
-      PlaylistItemMarkerId: newId,
-      PlaylistItemId: idMapA.get('PlaylistItem', m.PlaylistItemId),
-    });
+    merged.push({ ...m, PlaylistItemMarkerId: newId, PlaylistItemId: parentId });
     idMapA.set(TABLE, m.PlaylistItemMarkerId, newId);
   }
 
   for (const m of markersB) {
+    const parentId = idMapB.tryGet('PlaylistItem', m.PlaylistItemId);
+    if (parentId === undefined) continue;
     const newId = nextId++;
-    merged.push({
-      ...m,
-      PlaylistItemMarkerId: newId,
-      PlaylistItemId: idMapB.get('PlaylistItem', m.PlaylistItemId),
-    });
+    merged.push({ ...m, PlaylistItemMarkerId: newId, PlaylistItemId: parentId });
     idMapB.set(TABLE, m.PlaylistItemMarkerId, newId);
   }
 
@@ -215,19 +207,17 @@ export function mergePlaylistItemLocationMaps(
   const merged: PlaylistItemLocationMap[] = [];
 
   for (const m of mapsA) {
-    merged.push({
-      ...m,
-      PlaylistItemId: idMapA.get('PlaylistItem', m.PlaylistItemId),
-      LocationId: idMapA.get('Location', m.LocationId),
-    });
+    const pid = idMapA.tryGet('PlaylistItem', m.PlaylistItemId);
+    const lid = idMapA.tryGet('Location', m.LocationId);
+    if (pid === undefined || lid === undefined) continue;
+    merged.push({ ...m, PlaylistItemId: pid, LocationId: lid });
   }
 
   for (const m of mapsB) {
-    merged.push({
-      ...m,
-      PlaylistItemId: idMapB.get('PlaylistItem', m.PlaylistItemId),
-      LocationId: idMapB.get('Location', m.LocationId),
-    });
+    const pid = idMapB.tryGet('PlaylistItem', m.PlaylistItemId);
+    const lid = idMapB.tryGet('Location', m.LocationId);
+    if (pid === undefined || lid === undefined) continue;
+    merged.push({ ...m, PlaylistItemId: pid, LocationId: lid });
   }
 
   return merged;
@@ -249,19 +239,17 @@ export function mergePlaylistItemIndependentMediaMaps(
   const merged: PlaylistItemIndependentMediaMap[] = [];
 
   for (const m of mapsA) {
-    merged.push({
-      ...m,
-      PlaylistItemId: idMapA.get('PlaylistItem', m.PlaylistItemId),
-      IndependentMediaId: idMapA.get('IndependentMedia', m.IndependentMediaId),
-    });
+    const pid = idMapA.tryGet('PlaylistItem', m.PlaylistItemId);
+    const mid = idMapA.tryGet('IndependentMedia', m.IndependentMediaId);
+    if (pid === undefined || mid === undefined) continue;
+    merged.push({ ...m, PlaylistItemId: pid, IndependentMediaId: mid });
   }
 
   for (const m of mapsB) {
-    merged.push({
-      ...m,
-      PlaylistItemId: idMapB.get('PlaylistItem', m.PlaylistItemId),
-      IndependentMediaId: idMapB.get('IndependentMedia', m.IndependentMediaId),
-    });
+    const pid = idMapB.tryGet('PlaylistItem', m.PlaylistItemId);
+    const mid = idMapB.tryGet('IndependentMedia', m.IndependentMediaId);
+    if (pid === undefined || mid === undefined) continue;
+    merged.push({ ...m, PlaylistItemId: pid, IndependentMediaId: mid });
   }
 
   return merged;
@@ -282,17 +270,15 @@ export function mergePlaylistItemMarkerBibleVerseMaps(
   const merged: PlaylistItemMarkerBibleVerseMap[] = [];
 
   for (const m of mapsA) {
-    merged.push({
-      ...m,
-      PlaylistItemMarkerId: idMapA.get('PlaylistItemMarker', m.PlaylistItemMarkerId),
-    });
+    const mid = idMapA.tryGet('PlaylistItemMarker', m.PlaylistItemMarkerId);
+    if (mid === undefined) continue;
+    merged.push({ ...m, PlaylistItemMarkerId: mid });
   }
 
   for (const m of mapsB) {
-    merged.push({
-      ...m,
-      PlaylistItemMarkerId: idMapB.get('PlaylistItemMarker', m.PlaylistItemMarkerId),
-    });
+    const mid = idMapB.tryGet('PlaylistItemMarker', m.PlaylistItemMarkerId);
+    if (mid === undefined) continue;
+    merged.push({ ...m, PlaylistItemMarkerId: mid });
   }
 
   return merged;
@@ -313,17 +299,15 @@ export function mergePlaylistItemMarkerParagraphMaps(
   const merged: PlaylistItemMarkerParagraphMap[] = [];
 
   for (const m of mapsA) {
-    merged.push({
-      ...m,
-      PlaylistItemMarkerId: idMapA.get('PlaylistItemMarker', m.PlaylistItemMarkerId),
-    });
+    const mid = idMapA.tryGet('PlaylistItemMarker', m.PlaylistItemMarkerId);
+    if (mid === undefined) continue;
+    merged.push({ ...m, PlaylistItemMarkerId: mid });
   }
 
   for (const m of mapsB) {
-    merged.push({
-      ...m,
-      PlaylistItemMarkerId: idMapB.get('PlaylistItemMarker', m.PlaylistItemMarkerId),
-    });
+    const mid = idMapB.tryGet('PlaylistItemMarker', m.PlaylistItemMarkerId);
+    if (mid === undefined) continue;
+    merged.push({ ...m, PlaylistItemMarkerId: mid });
   }
 
   return merged;
