@@ -81,6 +81,19 @@ describe('mergeUserMarks', () => {
     expect(winners.get(merged[0]!.UserMarkId)).toBe('B');
   });
 
+  it('should keep newer version on StyleIndex conflict', () => {
+    const { idMapA, idMapB } = setupLocationMaps();
+    const marksA = [makeMark({ UserMarkId: 1, UserMarkGuid: 'style', LocationId: 1, StyleIndex: 0, Version: 1 })];
+    const marksB = [makeMark({ UserMarkId: 10, UserMarkGuid: 'style', LocationId: 1, StyleIndex: 1, Version: 3 })];
+
+    const { merged, winners } = mergeUserMarks(marksA, marksB, idMapA, idMapB);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0]!.StyleIndex).toBe(1); // B's style
+    expect(merged[0]!.Version).toBe(3);
+    expect(winners.get(merged[0]!.UserMarkId)).toBe('B');
+  });
+
   it('should keep A on version tie', () => {
     const { idMapA, idMapB } = setupLocationMaps();
     const marksA = [makeMark({ UserMarkId: 1, UserMarkGuid: 'tie', LocationId: 1, ColorIndex: 2, Version: 1 })];

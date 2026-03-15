@@ -1,5 +1,6 @@
 import type { UserMark, BlockRange } from './models.js';
 import type { IdMap } from './id-map.js';
+import { groupBy, buildReverseIndex } from './utils.js';
 
 /**
  * Merge UserMark tables from two databases.
@@ -107,6 +108,7 @@ export function mergeBlockRanges(
   winners: Map<number, 'A' | 'B'>,
 ): BlockRange[] {
   const TABLE = 'BlockRange';
+  const PARENT_TABLE = 'UserMark';
   const merged: BlockRange[] = [];
   let nextId = 1;
 
@@ -114,12 +116,16 @@ export function mergeBlockRanges(
   const aByUserMark = groupBy(rangesA, (r) => r.UserMarkId);
   const bByUserMark = groupBy(rangesB, (r) => r.UserMarkId);
 
+  // Build reverse indexes: newUserMarkId → oldUserMarkId (O(n) upfront)
+  const reverseA = buildReverseIndex(aByUserMark, idMapA, PARENT_TABLE);
+  const reverseB = buildReverseIndex(bByUserMark, idMapB, PARENT_TABLE);
+
   // For each merged UserMark, pick ranges from the winning source
   for (const [newUserMarkId, source] of winners) {
-    const sourceRanges =
-      source === 'A'
-        ? findRangesForNewId(aByUserMark, idMapA, 'UserMark', newUserMarkId)
-        : findRangesForNewId(bByUserMark, idMapB, 'UserMark', newUserMarkId);
+    const reverse = source === 'A' ? reverseA : reverseB;
+    const rangeMap = source === 'A' ? aByUserMark : bByUserMark;
+    const oldUserMarkId = reverse.get(newUserMarkId);
+    const sourceRanges = oldUserMarkId !== undefined ? (rangeMap.get(oldUserMarkId) ?? []) : [];
 
     for (const range of sourceRanges) {
       const newRangeId = nextId++;
@@ -138,38 +144,4 @@ export function mergeBlockRanges(
   idMapB.setCounter(TABLE, nextId);
 
   return merged;
-}
-
-// ── Helpers ─────────────────────────────────────────────────
-
-function groupBy<T>(items: T[], keyFn: (item: T) => number): Map<number, T[]> {
-  const map = new Map<number, T[]>();
-  for (const item of items) {
-    const key = keyFn(item);
-    let group = map.get(key);
-    if (!group) {
-      group = [];
-      map.set(key, group);
-    }
-    group.push(item);
-  }
-  return map;
-}
-
-/**
- * Find ranges from a source that map to a given new UserMarkId.
- * We need to reverse-lookup: find the old UserMarkId that maps to newId.
- */
-function findRangesForNewId(
-  rangesByOldUserMark: Map<number, BlockRange[]>,
-  idMap: IdMap,
-  table: string,
-  newId: number,
-): BlockRange[] {
-  for (const [oldId, ranges] of rangesByOldUserMark) {
-    if (idMap.tryGet(table, oldId) === newId) {
-      return ranges;
-    }
-  }
-  return [];
 }
