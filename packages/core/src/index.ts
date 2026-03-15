@@ -7,3 +7,30 @@ export {
 } from './platform.js';
 
 export { runAdapterContractTests } from './platform-contract.js';
+
+export {
+  type Location,
+  type Note,
+  type UserMark,
+  type BlockRange,
+  type Bookmark,
+  type Tag,
+  type TagMap,
+  type InputField,
+  type IndependentMedia,
+  type PlaylistItem,
+  type PlaylistItemAccuracy,
+  type PlaylistItemIndependentMediaMap,
+  type PlaylistItemLocationMap,
+  type PlaylistItemMarker,
+  type PlaylistItemMarkerBibleVerseMap,
+  type PlaylistItemMarkerParagraphMap,
+  type DatabaseContents,
+  type JWLibraryArchive,
+  type Manifest,
+  type UserDataBackup,
+} from './models.js';
+
+export { ManifestSchema, CURRENT_SCHEMA_VERSION } from './schema.js';
+
+export { parseJWLibrary } from './parser.js';

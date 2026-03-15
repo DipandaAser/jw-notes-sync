@@ -36,3 +36,6 @@ Thumbs.db
 *.jwlibrary
 *.jwlibrary.zip
 UserdataBackup_*/
+
+# Allow test fixtures
+!packages/core/tests/fixtures/sample.jwlibrary
