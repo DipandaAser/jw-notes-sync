@@ -42,3 +42,4 @@ export { parseJWLibrary } from './parser.js';
 
 export { IdMap } from './id-map.js';
 export { mergeLocations, locationNaturalKey } from './merge-locations.js';
+export { mergeNotes, type MergeNotesOptions } from './merge-notes.js';
