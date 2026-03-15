@@ -39,11 +39,11 @@ export async function parseJWLibrary(
     throw new Error(`${DB_NAME} not found in archive`);
   }
 
-  // 5. Verify hash
+  // 5. Verify hash (warn but don't reject — real-world archives may have mismatches)
   const hash = await adapter.hashSHA256(dbBytes);
   if (hash !== manifest.userDataBackup.hash) {
-    throw new Error(
-      `Database hash mismatch. Expected ${manifest.userDataBackup.hash}, got ${hash}.`,
+    console.warn(
+      `Database hash mismatch. Expected ${manifest.userDataBackup.hash}, got ${hash}. Proceeding anyway.`,
     );
   }
 

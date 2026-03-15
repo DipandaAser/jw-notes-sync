@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parseJWLibrary, getSupportedVersions } from '../src/index.js';
@@ -147,7 +147,15 @@ describe('parseJWLibrary error handling', () => {
     );
   });
 
-  it('should reject archive with hash mismatch', async () => {
+  it('should warn but not reject archive with hash mismatch', async () => {
+    // Extract the real DB from the fixture so we have valid SQLite bytes
+    const realArchive = await parseJWLibrary(nodeAdapter, fixtureBytes);
+    const realDbBytes = await nodeAdapter.exportDatabase(
+      await nodeAdapter.openDatabase(
+        (await nodeAdapter.extractZip(fixtureBytes)).files.get('userData.db')!,
+      ),
+    );
+
     const manifest = JSON.stringify({
       name: 'test',
       creationDate: '2026-01-01',
@@ -158,16 +166,18 @@ describe('parseJWLibrary error handling', () => {
         deviceName: 'Test',
         databaseName: 'userData.db',
         hash: 'wrong_hash',
-        schemaVersion: 14,
+        schemaVersion: realArchive.manifest.userDataBackup.schemaVersion,
       },
     });
     const zip = await nodeAdapter.createZip([
       { path: 'manifest.json', data: new TextEncoder().encode(manifest) },
-      { path: 'userData.db', data: new Uint8Array([1, 2, 3]) },
+      { path: 'userData.db', data: realDbBytes },
     ]);
 
-    await expect(parseJWLibrary(nodeAdapter, zip)).rejects.toThrow(
-      'Database hash mismatch',
-    );
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const archive = await parseJWLibrary(nodeAdapter, zip);
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Database hash mismatch'));
+    expect(archive.database).toBeDefined();
+    warnSpy.mockRestore();
   });
 });
