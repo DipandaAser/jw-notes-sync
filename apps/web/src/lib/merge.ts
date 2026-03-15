@@ -164,7 +164,7 @@ export function downloadArchive() {
 
   const now = new Date().toISOString().split('T')[0];
   const filename = `MergedBackup_${now}.jwlibrary`;
-  const blob = new Blob([appState.archiveBytes], { type: 'application/zip' });
+  const blob = new Blob([appState.archiveBytes as Uint8Array<ArrayBuffer>], { type: 'application/zip' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

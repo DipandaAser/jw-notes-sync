@@ -5,7 +5,12 @@ const config = {
 	kit: {
 		adapter: adapter({
 			fallback: 'index.html'
-		})
+		}),
+		alias: {
+			'$components': 'src/lib/components',
+			'$stores': 'src/lib/stores',
+			'$assets': 'src/lib/assets'
+		}
 	},
 	vitePlugin: {
 		dynamicCompileOptions: ({ filename }) =>

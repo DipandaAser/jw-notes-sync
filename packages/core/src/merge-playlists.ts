@@ -127,17 +127,17 @@ export function mergePlaylistItems(
   let nextId = 1;
 
   for (const item of itemsA) {
-    const newId = nextId++;
     const accuracy = idMapA.tryGet('PlaylistItemAccuracy', item.Accuracy);
     if (accuracy === undefined) continue; // orphaned row — skip
+    const newId = nextId++;
     merged.push({ ...item, PlaylistItemId: newId, Accuracy: accuracy });
     idMapA.set(TABLE, item.PlaylistItemId, newId);
   }
 
   for (const item of itemsB) {
-    const newId = nextId++;
     const accuracy = idMapB.tryGet('PlaylistItemAccuracy', item.Accuracy);
     if (accuracy === undefined) continue; // orphaned row — skip
+    const newId = nextId++;
     merged.push({ ...item, PlaylistItemId: newId, Accuracy: accuracy });
     idMapB.set(TABLE, item.PlaylistItemId, newId);
   }
