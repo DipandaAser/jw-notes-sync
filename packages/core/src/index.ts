@@ -47,4 +47,14 @@ export { mergeUserMarks, mergeBlockRanges } from './merge-usermarks.js';
 export { mergeBookmarks } from './merge-bookmarks.js';
 export { mergeTags, mergeTagMaps } from './merge-tags.js';
 export { mergeInputFields, type MergeInputFieldsOptions } from './merge-input-fields.js';
+export {
+  mergeIndependentMedia,
+  mergePlaylistItemAccuracy,
+  mergePlaylistItems,
+  mergePlaylistItemMarkers,
+  mergePlaylistItemLocationMaps,
+  mergePlaylistItemIndependentMediaMaps,
+  mergePlaylistItemMarkerBibleVerseMaps,
+  mergePlaylistItemMarkerParagraphMaps,
+} from './merge-playlists.js';
 export { groupBy, buildReverseIndex } from './utils.js';
