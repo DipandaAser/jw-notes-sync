@@ -73,7 +73,20 @@ importers:
         version: 3.2.4(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)
 
   packages/core:
+    dependencies:
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
+      '@types/sql.js':
+        specifier: ^1.4.9
+        version: 1.4.9
+      jszip:
+        specifier: ^3.10.1
+        version: 3.10.1
+      sql.js:
+        specifier: ^1.14.1
+        version: 1.14.1
       typescript:
         specifier: ^5.8.0
         version: 5.9.3
@@ -1439,6 +1452,9 @@ packages:
   zimmerframe@1.1.4:
     resolution: {integrity: sha512-B58NGBEoc8Y9MWWCQGl/gq9xBCe4IiKM0a2x7GZdQKOW5Exr8S1W24J6OgM1njK8xCRGvAJIL/MxXHf6SkmQKQ==}
 
+  zod@4.3.6:
+    resolution: {integrity: sha512-rftlrkhHZOcjDwkGlnUtZZkvaPHCsDATp4pGpuOOMDaTdDDXF91wuVDJoWoPsKX/3YPQ5fHuF3STjcYyKr+Qhg==}
+
 snapshots:
 
   '@esbuild/aix-ppc64@0.27.4':
@@ -2629,3 +2645,5 @@ snapshots:
   yocto-queue@0.1.0: {}
 
   zimmerframe@1.1.4: {}
+
+  zod@4.3.6: {}

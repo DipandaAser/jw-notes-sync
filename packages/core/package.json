@@ -18,7 +18,13 @@
     "format": "prettier --write src/"
   },
   "devDependencies": {
+    "@types/sql.js": "^1.4.9",
+    "jszip": "^3.10.1",
+    "sql.js": "^1.14.1",
     "typescript": "^5.8.0",
     "vitest": "^3.1.0"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
   }
 }
