@@ -80,22 +80,36 @@ export interface PlatformAdapter {
 
 Tables must be merged in this exact order. Each step populates ID mappings that downstream steps depend on via `IdMap`. Calling a merge function before its dependencies will throw.
 
-```text
-1. Location          (no FK dependencies — root of the merge)
-2. UserMark          (depends on: Location)
-3. Note              (depends on: Location, UserMark)
-4. BlockRange        (depends on: UserMark)
-5. Bookmark          (depends on: Location)
-6. Tag               (no FK dependencies)
-7. TagMap            (depends on: Tag, Note, Location, PlaylistItem)
-8. InputField        (depends on: Location)
-9. IndependentMedia  (no FK dependencies)
-10. PlaylistItem     (depends on: IndependentMedia via ThumbnailFilePath)
-11. PlaylistItemIndependentMediaMap  (depends on: PlaylistItem, IndependentMedia)
-12. PlaylistItemLocationMap          (depends on: PlaylistItem, Location)
-13. PlaylistItemMarker               (depends on: PlaylistItem)
-14. PlaylistItemMarkerBibleVerseMap  (depends on: PlaylistItemMarker)
-15. PlaylistItemMarkerParagraphMap   (depends on: PlaylistItemMarker)
+```mermaid
+graph TD
+    Location["1. Location"]
+    Tag["6. Tag"]
+    IndependentMedia["9. IndependentMedia"]
+
+    Location --> UserMark["2. UserMark"]
+    Location --> Bookmark["5. Bookmark"]
+    Location --> InputField["8. InputField"]
+
+    Location --> Note["3. Note"]
+    UserMark --> Note
+    UserMark --> BlockRange["4. BlockRange"]
+
+    Tag --> TagMap["7. TagMap"]
+    Note --> TagMap
+    Location --> TagMap
+    PlaylistItem --> TagMap
+
+    IndependentMedia --> PlaylistItem["10. PlaylistItem"]
+
+    PlaylistItem --> PIIndependentMediaMap["11. PlaylistItemIndependentMediaMap"]
+    IndependentMedia --> PIIndependentMediaMap
+
+    PlaylistItem --> PILocationMap["12. PlaylistItemLocationMap"]
+    Location --> PILocationMap
+
+    PlaylistItem --> PIMarker["13. PlaylistItemMarker"]
+    PIMarker --> PIMarkerBibleVerseMap["14. PlaylistItemMarkerBibleVerseMap"]
+    PIMarker --> PIMarkerParagraphMap["15. PlaylistItemMarkerParagraphMap"]
 ```
 
 #### Table Merge Strategies
