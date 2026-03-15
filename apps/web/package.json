@@ -11,10 +11,13 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "eslint .",
-		"format": "prettier --write ."
+		"format": "prettier --write .",
+		"test": "vitest run"
 	},
 	"dependencies": {
-		"@jw-notes-sync/core": "workspace:*"
+		"@jw-notes-sync/core": "workspace:*",
+		"jszip": "^3.10.1",
+		"sql.js": "^1.14.1"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.0",
@@ -22,6 +25,7 @@
 		"@sveltejs/kit": "^2.50.2",
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
 		"@tailwindcss/vite": "^4.2.1",
+		"@types/sql.js": "^1.4.9",
 		"bits-ui": "^2.16.3",
 		"eslint": "^10.0.3",
 		"eslint-plugin-svelte": "^3.15.2",
@@ -31,6 +35,7 @@
 		"svelte-check": "^4.4.2",
 		"tailwindcss": "^4.2.1",
 		"typescript": "^5.9.3",
-		"vite": "^7.3.1"
+		"vite": "^7.3.1",
+		"vitest": "^3.2.4"
 	}
 }

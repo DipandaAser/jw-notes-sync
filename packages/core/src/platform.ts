@@ -1,17 +1,24 @@
-/** Opaque database handle — platform-specific implementation */
-export type Database = unknown;
+/**
+ * Opaque database handle.
+ * Branded with a symbol so platform implementations can use their own internal type
+ * while the core only passes it around without inspecting it.
+ */
+export type Database = { readonly __brand: 'Database' };
 
 /** A single row from a SQL query result */
 export type Row = Record<string, unknown>;
 
 /** Contents extracted from a ZIP archive */
 export interface ZipContents {
+  /** Map of file path → file bytes */
   files: Map<string, Uint8Array>;
 }
 
 /** An entry to be added to a ZIP archive */
 export interface ZipEntry {
+  /** File path inside the archive (e.g. "userData.db") */
   path: string;
+  /** File contents */
   data: Uint8Array;
 }
 
@@ -24,23 +31,27 @@ export interface ZipEntry {
  * Each platform (web, mobile) provides its own implementation.
  */
 export interface PlatformAdapter {
+  // ── SQLite ──────────────────────────────────────────────
+
   /** Open a SQLite database from raw bytes */
   openDatabase(bytes: Uint8Array): Promise<Database>;
 
-  /** Execute a SQL query and return result rows */
+  /** Create a new empty database */
+  createDatabase(): Promise<Database>;
+
+  /** Execute a read query and return result rows */
   executeQuery(db: Database, sql: string, params?: unknown[]): Promise<Row[]>;
 
-  /** Execute a SQL statement that doesn't return rows (INSERT, UPDATE, etc.) */
+  /** Execute a write statement (INSERT, UPDATE, DELETE, CREATE TABLE, etc.) */
   executeRun(db: Database, sql: string, params?: unknown[]): Promise<void>;
+
+  /** Export a database to raw bytes (for writing to a file) */
+  exportDatabase(db: Database): Promise<Uint8Array>;
 
   /** Close a database and free resources */
   closeDatabase(db: Database): Promise<void>;
 
-  /** Export a database to raw bytes */
-  exportDatabase(db: Database): Promise<Uint8Array>;
-
-  /** Create an empty database with no tables */
-  createDatabase(): Promise<Database>;
+  // ── ZIP ─────────────────────────────────────────────────
 
   /** Extract all files from a ZIP archive */
   extractZip(bytes: Uint8Array): Promise<ZipContents>;
@@ -48,6 +59,8 @@ export interface PlatformAdapter {
   /** Create a ZIP archive from entries */
   createZip(entries: ZipEntry[]): Promise<Uint8Array>;
 
-  /** Compute SHA-256 hash of data, returned as hex string */
+  // ── Hashing ─────────────────────────────────────────────
+
+  /** Compute SHA-256 hash of data, returned as lowercase hex string */
   hashSHA256(data: Uint8Array): Promise<string>;
 }
