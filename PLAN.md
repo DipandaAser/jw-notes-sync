@@ -75,6 +75,45 @@ export interface PlatformAdapter {
 - [ ] Round-trip test: parse → rebuild → binary-compare
 
 ### 1.4 Merge Engine (`packages/core/merge`)
+
+#### Merge Dependency Order
+
+Tables must be merged in this exact order. Each step populates ID mappings that downstream steps depend on via `IdMap`. Calling a merge function before its dependencies will throw.
+
+```mermaid
+graph TD
+    Location["1. Location"]
+    Tag["6. Tag"]
+    IndependentMedia["9. IndependentMedia"]
+
+    Location --> UserMark["2. UserMark"]
+    Location --> Bookmark["5. Bookmark"]
+    Location --> InputField["8. InputField"]
+
+    Location --> Note["3. Note"]
+    UserMark --> Note
+    UserMark --> BlockRange["4. BlockRange"]
+
+    Tag --> TagMap["7. TagMap"]
+    Note --> TagMap
+    Location --> TagMap
+    PlaylistItem --> TagMap
+
+    IndependentMedia --> PlaylistItem["10. PlaylistItem"]
+
+    PlaylistItem --> PIIndependentMediaMap["11. PlaylistItemIndependentMediaMap"]
+    IndependentMedia --> PIIndependentMediaMap
+
+    PlaylistItem --> PILocationMap["12. PlaylistItemLocationMap"]
+    Location --> PILocationMap
+
+    PlaylistItem --> PIMarker["13. PlaylistItemMarker"]
+    PIMarker --> PIMarkerBibleVerseMap["14. PlaylistItemMarkerBibleVerseMap"]
+    PIMarker --> PIMarkerParagraphMap["15. PlaylistItemMarkerParagraphMap"]
+```
+
+#### Table Merge Strategies
+
 - [ ] **Location deduplication** — match Locations across DBs by natural key (`BookNumber + ChapterNumber + KeySymbol + MepsLanguage + Type`) and remap IDs
 - [ ] **Note merge** — match by `Guid`, keep newer `LastModified` for conflicts, union for unique notes
 - [ ] **UserMark merge** — match by `UserMarkGuid`, keep newer version, remap LocationId

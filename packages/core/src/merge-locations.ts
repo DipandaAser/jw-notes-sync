@@ -33,13 +33,14 @@ export interface MergeLocationsResult {
 /**
  * Merge Location tables from two databases.
  *
+ * **Merge order: 1 (root)** — no FK dependencies. Must run before all other merges.
+ * Populates `Location` mappings in both IdMaps that downstream merges depend on:
+ * UserMark, Note, Bookmark, TagMap, InputField, PlaylistItemLocationMap.
+ *
  * Strategy: match by natural key, keep non-null Title, assign new sequential IDs.
  *
  * - Matching locations → single entry with non-null Title preferred
  * - Unique to A or B → carried over with new ID
- *
- * Both idMapA and idMapB are populated with Location oldId→newId mappings
- * so downstream merges can remap their LocationId foreign keys.
  */
 export function mergeLocations(
   locationsA: Location[],
