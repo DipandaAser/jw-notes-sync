@@ -95,7 +95,7 @@ describe('buildArchive', () => {
     expect(parsed.manifest.type).toBe(0);
     expect(parsed.manifest.userDataBackup.schemaVersion).toBe(14);
     expect(parsed.manifest.userDataBackup.deviceName).toBe('JW Notes Sync');
-    expect(parsed.manifest.name).toMatch(/^MergedBackup_\d{4}-\d{2}-\d{2}$/);
+    expect(parsed.manifest.name).toMatch(/^MergedBackup_\d{4}-\d{2}-\d{2}\.jwlibrary$/);
 
     expect(parsed.database.locations).toHaveLength(1);
     expect(parsed.database.locations[0]!.Title).toBe('Genesis 1');

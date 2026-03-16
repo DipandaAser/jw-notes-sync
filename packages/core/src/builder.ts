@@ -415,8 +415,8 @@ export async function buildArchive(
     // 8. Build manifest
     const dateStr = now.split('T')[0]!;
     const manifest: Manifest = {
-      name: `MergedBackup_${dateStr}`,
-      creationDate: now,
+      name: `MergedBackup_${dateStr}.jwlibrary`,
+      creationDate: dateStr,
       version: 1,
       type: 0,
       userDataBackup: {
