@@ -28,9 +28,9 @@ const MERGE_STEPS = [
   'Surlignages',
   'Notes',
   'Signets',
+  'Playlists',
   'Étiquettes',
   'Formulaires',
-  'Playlists',
   'Exportation',
 ];
 
@@ -75,17 +75,8 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
     updateProgress(3);
     const bookmarks = mergeBookmarks(a.bookmarks, b.bookmarks, idMapA, idMapB);
 
-    // Step 4: Tags + TagMaps
+    // Step 4: Playlists (must be before TagMaps since TagMap references PlaylistItemId)
     updateProgress(4);
-    const tags = mergeTags(a.tags, b.tags, idMapA, idMapB);
-    const tagMaps = mergeTagMaps(a.tagMaps, b.tagMaps, idMapA, idMapB);
-
-    // Step 5: InputFields
-    updateProgress(5);
-    const inputFields = mergeInputFields(a.inputFields, b.inputFields, idMapA, idMapB, { deviceNameA, deviceNameB });
-
-    // Step 6: Playlists
-    updateProgress(6);
     const independentMedia = mergeIndependentMedia(a.independentMedia, b.independentMedia, idMapA, idMapB);
     const playlistItemAccuracies = mergePlaylistItemAccuracy(a.playlistItemAccuracies, b.playlistItemAccuracies, idMapA, idMapB);
     const playlistItems = mergePlaylistItems(a.playlistItems, b.playlistItems, idMapA, idMapB);
@@ -94,6 +85,15 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
     const playlistItemIndependentMediaMaps = mergePlaylistItemIndependentMediaMaps(a.playlistItemIndependentMediaMaps, b.playlistItemIndependentMediaMaps, idMapA, idMapB);
     const playlistItemMarkerBibleVerseMaps = mergePlaylistItemMarkerBibleVerseMaps(a.playlistItemMarkerBibleVerseMaps, b.playlistItemMarkerBibleVerseMaps, idMapA, idMapB);
     const playlistItemMarkerParagraphMaps = mergePlaylistItemMarkerParagraphMaps(a.playlistItemMarkerParagraphMaps, b.playlistItemMarkerParagraphMaps, idMapA, idMapB);
+
+    // Step 5: Tags + TagMaps (after PlaylistItems so TagMap can resolve PlaylistItemId FKs)
+    updateProgress(5);
+    const tags = mergeTags(a.tags, b.tags, idMapA, idMapB);
+    const tagMaps = mergeTagMaps(a.tagMaps, b.tagMaps, idMapA, idMapB);
+
+    // Step 6: InputFields
+    updateProgress(6);
+    const inputFields = mergeInputFields(a.inputFields, b.inputFields, idMapA, idMapB, { deviceNameA, deviceNameB });
 
     const contents: DatabaseContents = {
       locations,

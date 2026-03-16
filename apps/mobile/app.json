@@ -123,6 +123,13 @@
       "expo-router",
       "expo-sqlite",
       "expo-sharing"
-    ]
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "53084ea6-e410-4d50-ae07-634995855c94"
+      }
+    },
+    "owner": "jw-notes-sync"
   }
 }
