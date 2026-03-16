@@ -115,8 +115,16 @@ async function loadDatabase(
     androidMetadata: null,
   };
 
-  // Query all tables in parallel
+  // Get actual tables present in the database
+  const tableInfoRows = await adapter.executeQuery(
+    db,
+    `SELECT name FROM sqlite_master WHERE type='table'`,
+  );
+  const existingTables = new Set(tableInfoRows.map((r) => r['name'] as string));
+
+  // Query all tables in parallel (skip missing ones)
   const queries = tables.map(async (table) => {
+    if (!existingTables.has(table)) return;
     const rows = await adapter.executeQuery(db, `SELECT * FROM ${table}`);
 
     if (table === 'LastModified') {
