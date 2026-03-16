@@ -1,68 +1,72 @@
-import { Stack } from 'expo-router';
-import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
-import * as Linking from 'expo-linking';
-import { importFromUri } from '../src/lib/import';
-import { getColors } from '../src/theme';
+import { Tabs } from "expo-router"
+import { useEffect } from "react"
+import { useColorScheme } from "react-native"
+import * as Linking from "expo-linking"
+import { House, Settings } from "lucide-react-native"
+import { importFromUri } from "../src/lib/import"
+import { getColors } from "../src/theme"
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const colors = getColors(isDark);
+  const colorScheme = useColorScheme()
+  const isDark = colorScheme === "dark"
+  const colors = getColors(isDark)
 
   useEffect(() => {
-    // Handle incoming file shares
-    const subscription = Linking.addEventListener('url', async (event) => {
+    const subscription = Linking.addEventListener("url", async (event) => {
       if (event.url) {
         try {
-          await importFromUri(event.url);
+          await importFromUri(event.url)
         } catch (err) {
-          console.warn('Failed to import shared file:', err);
+          console.warn("Failed to import shared file:", err)
         }
       }
-    });
+    })
 
-    // Check for initial URL (app opened via file share)
     Linking.getInitialURL().then(async (url) => {
       if (url) {
         try {
-          await importFromUri(url);
+          await importFromUri(url)
         } catch (err) {
-          console.warn('Failed to import initial file:', err);
+          console.warn("Failed to import initial file:", err)
         }
       }
-    });
+    })
 
-    return () => subscription.remove();
-  }, []);
+    return () => subscription.remove()
+  }, [])
 
   return (
-    <Stack
+    <Tabs
       screenOptions={{
-        headerStyle: {
-          backgroundColor: colors.primary,
-        },
-        headerTintColor: '#ffffff',
-        headerTitleStyle: {
-          fontWeight: '600',
-        },
-        contentStyle: {
+        headerShown: false,
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarStyle: {
           backgroundColor: colors.bg,
+          borderTopColor: colors.border,
         },
       }}
     >
-      <Stack.Screen
-        name="index"
-        options={{ title: 'JW Notes Sync' }}
+      <Tabs.Screen
+        name="(home)"
+        options={{
+          title: "Accueil",
+          tabBarIcon: ({ color, size }) => <House color={color} size={size} />,
+        }}
       />
-      <Stack.Screen
-        name="merge"
-        options={{ title: 'Fusion' }}
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Paramètres",
+          headerShown: true,
+          headerStyle: { backgroundColor: colors.primary },
+          headerTintColor: "#ffffff",
+          headerTitleStyle: { fontWeight: "600" },
+          tabBarIcon: ({ color, size }) => (
+            <Settings color={color} size={size} />
+          ),
+        }}
       />
-      <Stack.Screen
-        name="export"
-        options={{ title: 'Exporter' }}
-      />
-    </Stack>
-  );
+    </Tabs>
+  )
 }

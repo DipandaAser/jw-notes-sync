@@ -6,17 +6,28 @@ import {
   Alert,
   useColorScheme,
 } from "react-native"
-import { useRouter } from "expo-router"
+import { useLayoutEffect } from "react"
+import { useRouter, useNavigation } from "expo-router"
 import { File, Paths } from "expo-file-system"
 import * as Sharing from "expo-sharing"
-import { useAppStore } from "../src/stores/app"
-import { getColors } from "../src/theme"
+import { Share2, RefreshCw } from "lucide-react-native"
+import { useAppStore } from "../../src/stores/app"
+import { getColors } from "../../src/theme"
 
 export default function ExportScreen() {
   const router = useRouter()
+  const navigation = useNavigation()
   const colorScheme = useColorScheme()
   const isDark = colorScheme === "dark"
   const colors = getColors(isDark)
+
+  useLayoutEffect(() => {
+    const parent = navigation.getParent()
+    parent?.setOptions({ tabBarStyle: { display: "none" } })
+    return () => {
+      parent?.setOptions({ tabBarStyle: undefined })
+    }
+  }, [navigation])
 
   const mergeResult = useAppStore((s) => s.mergeResult)
   const archiveBytes = useAppStore((s) => s.archiveBytes)
@@ -50,7 +61,7 @@ export default function ExportScreen() {
 
   function handleNewMerge() {
     reset()
-    router.dismissTo("/")
+    router.dismissTo("/(home)/")
   }
 
   if (!mergeResult) {
@@ -61,7 +72,7 @@ export default function ExportScreen() {
         </Text>
         <Pressable
           style={[styles.button, { backgroundColor: colors.primary }]}
-          onPress={() => router.replace("/")}
+          onPress={() => router.replace("/(home)/")}
         >
           <Text style={styles.buttonText}>Retour</Text>
         </Pressable>
@@ -119,9 +130,12 @@ export default function ExportScreen() {
           style={[styles.exportButton, { backgroundColor: colors.primary }]}
           onPress={handleExport}
         >
-          <Text style={styles.exportButtonText}>
-            Partager le fichier .jwlibrary
-          </Text>
+          <View style={styles.exportButtonContent}>
+            <Share2 color="#ffffff" size={18} />
+            <Text style={styles.exportButtonText}>
+              Partager le fichier .jwlibrary
+            </Text>
+          </View>
         </Pressable>
 
         <Pressable
@@ -135,9 +149,12 @@ export default function ExportScreen() {
           ]}
           onPress={handleNewMerge}
         >
-          <Text style={[styles.buttonText, { color: colors.text }]}>
-            Nouvelle fusion
-          </Text>
+          <View style={styles.exportButtonContent}>
+            <RefreshCw color={colors.text} size={16} />
+            <Text style={[styles.buttonText, { color: colors.text }]}>
+              Nouvelle fusion
+            </Text>
+          </View>
         </Pressable>
       </View>
     </View>
@@ -204,6 +221,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
+  },
+  exportButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   exportButtonText: {
     color: "#ffffff",

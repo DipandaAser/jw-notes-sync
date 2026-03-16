@@ -17,6 +17,7 @@
 	"dependencies": {
 		"@jw-notes-sync/core": "workspace:*",
 		"jszip": "^3.10.1",
+		"lucide-svelte": "^0.577.0",
 		"sql.js": "^1.14.1"
 	},
 	"devDependencies": {

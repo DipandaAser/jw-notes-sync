@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { appState } from '$lib/stores/app.svelte';
 	import { downloadArchive } from '$lib/merge';
+	import { Check, Smartphone, Download } from 'lucide-svelte';
 
 	const result = $derived(appState.mergeResult);
 
@@ -31,7 +32,7 @@
 			class="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full text-2xl font-bold text-white"
 			style="background: var(--accent);"
 		>
-			✓
+			<Check size={28} />
 		</div>
 		<h1 class="mb-2 text-3xl font-bold tracking-tight">Fusion terminée</h1>
 		<p class="text-base" style="color: var(--text-secondary);">
@@ -67,7 +68,7 @@
 					class="flex items-center gap-3 rounded-lg border px-4 py-3"
 					style="background: var(--surface-1); border-color: var(--border);"
 				>
-					<span class="text-lg">📱</span>
+					<Smartphone size={18} style="color: var(--text-tertiary);" />
 					<span class="font-medium">{backup.deviceName}</span>
 					<span class="text-xs" style="color: var(--text-tertiary);">{backup.fileName}</span>
 				</div>
