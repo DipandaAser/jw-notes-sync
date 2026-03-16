@@ -258,6 +258,7 @@ export async function buildArchive(
   try {
     // 1. Create schema
     await adapter.executeRun(db, 'PRAGMA foreign_keys = OFF');
+    await adapter.executeRun(db, 'PRAGMA user_version = 14');
     for (const ddl of SCHEMA_DDL) {
       await adapter.executeRun(db, ddl);
     }
