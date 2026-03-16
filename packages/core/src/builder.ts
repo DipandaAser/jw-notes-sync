@@ -428,7 +428,7 @@ export async function buildArchive(
       },
     };
 
-    const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest, null, 2));
+    const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest));
 
     // 9. Pack ZIP
     const entries: ZipEntry[] = [
