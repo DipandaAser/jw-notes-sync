@@ -358,6 +358,51 @@ jw-notes-sync/
 
 ---
 
+## .jwlibrary File Format — Technical Notes
+
+These are undocumented requirements discovered through testing with real JW Library apps on Android and iOS. The generated `.jwlibrary` file must satisfy all of them to be accepted during import.
+
+### SQLite Database Requirements
+
+| Requirement | Value | Notes |
+| ----------- | ----- | ----- |
+| `PRAGMA user_version` | `14` | Must match `schemaVersion` in manifest. Android JW Library silently rejects import if this is `0` or mismatched. |
+| `PRAGMA journal_mode` | `delete` | Android requires a standard rollback-journal database. WAL mode (expo-sqlite default) causes import failure. iOS is more tolerant. |
+| `PRAGMA foreign_keys` | Passes `PRAGMA foreign_key_check` | All FK references must be valid. Orphaned rows (e.g., TagMap referencing a missing PlaylistItem) cause CHECK constraint failures. |
+| All 18 tables present | Even if empty | The schema must include all tables from v14, including `android_metadata` and `LastModified`. |
+| `android_metadata` table | Must contain a `locale` row (e.g. `en_US`) | Required for Android compatibility. |
+
+### Manifest Requirements
+
+| Field | Requirement |
+| ----- | ----------- |
+| `userDataBackup.hash` | SHA-256 hex digest of the raw `userData.db` bytes. Must match exactly. |
+| `userDataBackup.schemaVersion` | `14` (current version as of 2026). |
+| `userDataBackup.databaseName` | `userData.db` |
+| `version` | `1` |
+| `type` | `0` |
+
+### Hash Verification
+
+- The `hash` field in `manifest.json` is a SHA-256 hash of the **raw database file bytes** (not base64-encoded, not the WAL-merged content).
+- When hashing on mobile (expo-crypto), use `Crypto.digest()` with the raw `Uint8Array`, **not** `digestStringAsync()` which hashes a string representation.
+- Some real JW Library backups (especially from iPad) have hash mismatches. The parser warns but proceeds; however, **generated** files must always have a correct hash.
+
+### Tables That May Be Missing
+
+Some `.jwlibrary` backups (particularly from older versions or specific devices) may not contain all 18 tables. The parser checks `sqlite_master` before querying and skips missing tables gracefully. However, the **builder always creates all 18 tables** to ensure maximum compatibility.
+
+### Platform-Specific Behaviors
+
+| Behavior | Android | iOS |
+| -------- | ------- | --- |
+| `user_version` check | **Strict** — rejects if not `14` | Tolerant |
+| WAL journal mode | **Rejects** WAL databases | Accepts WAL |
+| Hash mismatch on import | Rejects | Sometimes tolerant |
+| `android_metadata` table | Required | Ignored |
+
+---
+
 ## Non-Goals (Explicit)
 
 - No user accounts or authentication on our side
