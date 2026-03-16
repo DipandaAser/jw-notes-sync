@@ -45,6 +45,9 @@ function unwrap(db: Database): DbHandle {
   return handle;
 }
 
+/** Directory URI where temp DB files are stored */
+const DB_DIR = Paths.document.uri;
+
 function getTempDbFile(): File {
   return new File(Paths.document, `tmp_db_${Date.now()}_${dbCounter++}.db`);
 }
@@ -81,15 +84,13 @@ export const nativeAdapter: PlatformAdapter = {
     const base64 = uint8ArrayToBase64(bytes);
     file.write(base64, { encoding: 'base64' });
 
-    const fileName = file.name;
-    const db = await SQLite.openDatabaseAsync(fileName);
+    const db = await SQLite.openDatabaseAsync(file.name, {}, DB_DIR);
     return wrap({ db, file });
   },
 
   async createDatabase(): Promise<Database> {
     const file = getTempDbFile();
-    const fileName = file.name;
-    const db = await SQLite.openDatabaseAsync(fileName);
+    const db = await SQLite.openDatabaseAsync(file.name, {}, DB_DIR);
     return wrap({ db, file });
   },
 
@@ -112,8 +113,7 @@ export const nativeAdapter: PlatformAdapter = {
     const base64 = await file.base64();
 
     // Reopen so the handle stays valid
-    const fileName = file.name;
-    const reopened = await SQLite.openDatabaseAsync(fileName);
+    const reopened = await SQLite.openDatabaseAsync(file.name, {}, DB_DIR);
     const handle = handleMap.get(db)!;
     handle.db = reopened;
 
