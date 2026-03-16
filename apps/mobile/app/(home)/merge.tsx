@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, useColorScheme } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useAppStore } from '../src/stores/app';
-import { runMerge } from '../src/lib/merge';
-import { getColors } from '../src/theme';
+import { useRouter, useNavigation } from 'expo-router';
+import { Check, CircleDot, Circle } from 'lucide-react-native';
+import { useAppStore } from '../../src/stores/app';
+import { runMerge } from '../../src/lib/merge';
+import { getColors } from '../../src/theme';
 
 export default function MergeScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const colors = getColors(isDark);
@@ -16,6 +18,14 @@ export default function MergeScreen() {
   const mergeProgress = useAppStore((s) => s.mergeProgress);
   const mergeError = useAppStore((s) => s.mergeError);
 
+  useLayoutEffect(() => {
+    const parent = navigation.getParent();
+    parent?.setOptions({ tabBarStyle: { display: 'none' } });
+    return () => {
+      parent?.setOptions({ tabBarStyle: undefined });
+    };
+  }, [navigation]);
+
   useEffect(() => {
     if (mergeStatus === 'idle' && backups.length >= 2) {
       runMerge(backups[0]!.archive, backups[1]!.archive);
@@ -24,7 +34,7 @@ export default function MergeScreen() {
 
   useEffect(() => {
     if (mergeStatus === 'done') {
-      router.replace('/export');
+      router.replace('/(home)/export');
     }
   }, [mergeStatus]);
 
@@ -49,14 +59,13 @@ export default function MergeScreen() {
           <View style={styles.stepsList}>
             {mergeProgress.steps.map((step) => (
               <View key={step.name} style={styles.stepRow}>
-                <View
-                  style={[
-                    styles.stepDot,
-                    step.status === 'done' && { backgroundColor: colors.success },
-                    step.status === 'current' && { backgroundColor: colors.primary },
-                    step.status === 'pending' && { backgroundColor: colors.border },
-                  ]}
-                />
+                {step.status === 'done' ? (
+                  <Check size={14} color={colors.success} />
+                ) : step.status === 'current' ? (
+                  <CircleDot size={14} color={colors.primary} />
+                ) : (
+                  <Circle size={14} color={colors.border} />
+                )}
                 <Text
                   style={[
                     styles.stepText,
@@ -80,7 +89,7 @@ export default function MergeScreen() {
             style={[styles.retryButton, { backgroundColor: colors.primary }]}
             onPress={() => {
               useAppStore.getState().setMergeStatus('idle');
-              router.replace('/');
+              router.replace('/(home)/');
             }}
           >
             <Text style={styles.retryButtonText}>Retour</Text>

@@ -3,9 +3,12 @@
 	import ImportScreen from '$lib/components/ImportScreen.svelte';
 	import MergeScreen from '$lib/components/MergeScreen.svelte';
 	import ExportScreen from '$lib/components/ExportScreen.svelte';
+	import SettingsScreen from '$lib/components/SettingsScreen.svelte';
 </script>
 
-{#if appState.screen === 'import'}
+{#if appState.tab === 'settings'}
+	<SettingsScreen />
+{:else if appState.screen === 'import'}
 	<ImportScreen />
 {:else if appState.screen === 'merge'}
 	<MergeScreen />

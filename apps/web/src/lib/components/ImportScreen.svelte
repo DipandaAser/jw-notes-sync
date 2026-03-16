@@ -2,6 +2,7 @@
 	import { parseJWLibrary } from '@jw-notes-sync/core';
 	import { webAdapter } from '$lib/adapter';
 	import { appState, type ImportedBackup } from '$lib/stores/app.svelte';
+	import { Upload, X, Loader } from 'lucide-svelte';
 
 	let dragging = $state(false);
 	let loading = $state(false);
@@ -112,7 +113,13 @@
 		onchange={onFileInput}
 		disabled={loading}
 	/>
-	<div class="text-4xl">{loading ? '⏳' : '📁'}</div>
+	<div class="flex justify-center" style="color: var(--text-tertiary);">
+		{#if loading}
+			<Loader size={40} class="animate-spin" />
+		{:else}
+			<Upload size={40} />
+		{/if}
+	</div>
 	<div class="mt-4 text-lg font-semibold" style="color: var(--text-primary);">
 		{loading ? 'Importation en cours…' : 'Glissez vos fichiers .jwlibrary ici'}
 	</div>
@@ -145,58 +152,38 @@
 	<div class="mb-8 flex flex-col gap-3">
 		{#each appState.backups as backup (backup.id)}
 			<div
-				class="grid items-center gap-4 rounded-xl border border-l-4 px-6 py-4 transition-all"
-				style="grid-template-columns: auto 1fr auto auto; background: var(--surface-1); border-color: var(--border); border-left-color: var(--accent);"
+				class="relative rounded-xl border p-4 transition-all"
+				style="background: var(--surface-1); border-color: var(--border);"
 			>
-				<div
-					class="grid h-11 w-11 place-items-center rounded text-xl"
-					style="background: var(--surface-2);"
-				>
-					📱
-				</div>
-				<div>
-					<h3 class="font-semibold">{backup.deviceName}</h3>
-					<div class="mt-0.5 text-xs" style="color: var(--text-tertiary);">
-						{formatDate(backup.date)} · {backup.fileName}
-					</div>
-				</div>
-				<div class="hidden gap-4 sm:flex">
-					<div class="text-right">
-						<div class="text-lg font-bold tabular-nums">{backup.stats.notes}</div>
-						<div
-							class="text-xs font-medium uppercase tracking-wider"
-							style="color: var(--text-tertiary);"
-						>
-							Notes
-						</div>
-					</div>
-					<div class="text-right">
-						<div class="text-lg font-bold tabular-nums">{backup.stats.highlights}</div>
-						<div
-							class="text-xs font-medium uppercase tracking-wider"
-							style="color: var(--text-tertiary);"
-						>
-							Surlignages
-						</div>
-					</div>
-					<div class="text-right">
-						<div class="text-lg font-bold tabular-nums">{backup.stats.bookmarks}</div>
-						<div
-							class="text-xs font-medium uppercase tracking-wider"
-							style="color: var(--text-tertiary);"
-						>
-							Signets
-						</div>
-					</div>
-				</div>
 				<button
-					class="grid h-8 w-8 place-items-center rounded text-lg transition-all hover:opacity-70"
-					style="color: var(--text-tertiary);"
+					class="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full transition-all hover:opacity-70"
+					style="background: var(--surface-2); color: var(--text-tertiary);"
 					onclick={() => appState.removeBackup(backup.id)}
 					aria-label="Supprimer"
 				>
-					✕
+					<X size={14} />
 				</button>
+				<div class="mb-1 flex items-center justify-between pr-8">
+					<h3 class="font-semibold">{backup.deviceName}</h3>
+					<span class="text-xs" style="color: var(--text-tertiary);">{formatDate(backup.date)}</span>
+				</div>
+				<div class="mb-3 text-xs" style="color: var(--text-tertiary);">{backup.fileName}</div>
+				<div class="flex flex-wrap gap-2">
+					{#each [
+						{ count: backup.stats.notes, label: 'Notes', color: 'var(--stat-1)' },
+						{ count: backup.stats.highlights, label: 'Surlignages', color: 'var(--stat-2)' },
+						{ count: backup.stats.bookmarks, label: 'Signets', color: 'var(--stat-3)' },
+						{ count: backup.stats.tags, label: 'Étiquettes', color: 'var(--stat-4)' },
+					] as stat}
+						<span
+							class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium"
+							style="background: color-mix(in srgb, {stat.color} 15%, transparent); color: {stat.color};"
+						>
+							<span class="font-bold">{stat.count}</span>
+							{stat.label}
+						</span>
+					{/each}
+				</div>
 			</div>
 		{/each}
 	</div>

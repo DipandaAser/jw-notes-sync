@@ -14,6 +14,8 @@ export interface ImportedBackup {
   };
 }
 
+export type Tab = 'home' | 'settings';
+
 export type Screen = 'import' | 'merge' | 'export';
 
 export type MergeStatus = 'idle' | 'merging' | 'done' | 'error';
@@ -38,6 +40,7 @@ export interface MergeResult {
 }
 
 class AppState {
+  tab = $state<Tab>('home');
   screen = $state<Screen>('import');
   backups = $state<ImportedBackup[]>([]);
   mergeStatus = $state<MergeStatus>('idle');
@@ -77,7 +80,12 @@ class AppState {
     this.backups = this.backups.filter((b) => b.id !== id);
   }
 
+  goToTab(tab: Tab) {
+    this.tab = tab;
+  }
+
   goTo(screen: Screen) {
+    this.tab = 'home';
     this.screen = screen;
   }
 
@@ -86,6 +94,7 @@ class AppState {
   }
 
   reset() {
+    this.tab = 'home';
     this.screen = 'import';
     this.backups = [];
     this.mergeStatus = 'idle';

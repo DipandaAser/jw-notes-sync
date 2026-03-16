@@ -1,8 +1,9 @@
 import { View, Text, StyleSheet, Pressable, FlatList, Alert, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAppStore } from '../src/stores/app';
-import { pickAndImportBackup } from '../src/lib/import';
-import { getColors } from '../src/theme';
+import { Plus, Smartphone, X } from 'lucide-react-native';
+import { useAppStore } from '../../src/stores/app';
+import { pickAndImportBackup } from '../../src/lib/import';
+import { getColors } from '../../src/theme';
 import { useState } from 'react';
 
 export default function ImportScreen() {
@@ -18,6 +19,18 @@ export default function ImportScreen() {
 
   const [importing, setImporting] = useState(false);
 
+  function formatDate(iso: string): string {
+    try {
+      return new Date(iso).toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    } catch {
+      return iso;
+    }
+  }
+
   async function handleImport() {
     setImporting(true);
     try {
@@ -32,7 +45,7 @@ export default function ImportScreen() {
   function handleMerge() {
     if (!canMerge()) return;
     goTo('merge');
-    router.push('/merge');
+    router.push('/(home)/merge');
   }
 
   function handleRemove(id: string) {
@@ -54,9 +67,12 @@ export default function ImportScreen() {
         onPress={handleImport}
         disabled={importing}
       >
-        <Text style={styles.importButtonText}>
-          {importing ? 'Importation...' : '+ Importer un fichier'}
-        </Text>
+        <View style={styles.importButtonContent}>
+          <Plus color="#ffffff" size={18} />
+          <Text style={styles.importButtonText}>
+            {importing ? 'Importation...' : 'Importer un fichier'}
+          </Text>
+        </View>
       </Pressable>
 
       <FlatList
@@ -78,7 +94,7 @@ export default function ImportScreen() {
           >
             <View style={styles.cardHeader}>
               <Text style={[styles.deviceName, { color: colors.text }]}>{item.deviceName}</Text>
-              <Text style={[styles.date, { color: colors.textMuted }]}>{item.date}</Text>
+              <Text style={[styles.date, { color: colors.textMuted }]}>{formatDate(item.date)}</Text>
             </View>
             <Text style={[styles.fileName, { color: colors.textMuted }]}>{item.fileName}</Text>
             <View style={styles.statsRow}>
@@ -137,6 +153,11 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  importButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   importButtonText: {
     color: '#ffffff',

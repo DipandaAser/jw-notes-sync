@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { appState } from '$lib/stores/app.svelte';
 	import { runMerge } from '$lib/merge';
+	import { Check, CircleDot, Circle, ArrowDown } from 'lucide-svelte';
 
 	function startMerge() {
 		if (appState.backups.length < 2) return;
@@ -100,7 +101,7 @@
 
 	<!-- Merge button / progress -->
 	{#if appState.mergeStatus === 'idle'}
-		<div class="mb-6 text-center" style="color: var(--text-tertiary);">↓</div>
+		<div class="mb-6 flex justify-center" style="color: var(--text-tertiary);"><ArrowDown size={20} /></div>
 		<div class="text-center">
 			<button
 				class="rounded-xl px-8 py-4 text-base font-semibold tracking-tight transition-all hover:-translate-y-0.5"
@@ -135,7 +136,7 @@
 								? 'var(--accent)'
 								: 'var(--text-tertiary)'}; font-weight: {step.status === 'current' ? '600' : '400'};"
 					>
-						{step.status === 'done' ? '✓' : step.status === 'current' ? '●' : '○'}
+						{#if step.status === "done"}<Check size={12} />{:else if step.status === "current"}<CircleDot size={12} />{:else}<Circle size={12} />{/if}
 						{step.name}
 					</span>
 				{/each}
