@@ -40,9 +40,9 @@ export default function RootLayout() {
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: colors.card,
+          backgroundColor: colors.primary,
         },
-        headerTintColor: colors.text,
+        headerTintColor: '#ffffff',
         headerTitleStyle: {
           fontWeight: '600',
         },

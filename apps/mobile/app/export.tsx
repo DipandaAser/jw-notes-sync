@@ -35,8 +35,6 @@ export default function ExportScreen() {
       const canShare = await Sharing.isAvailableAsync()
       if (canShare) {
         await Sharing.shareAsync(file.uri, {
-          // mimeType: 'application/zip',
-
           dialogTitle: "Exporter la sauvegarde fusionnée",
         })
       } else {
@@ -52,7 +50,7 @@ export default function ExportScreen() {
 
   function handleNewMerge() {
     reset()
-    router.replace("/")
+    router.dismissTo("/")
   }
 
   if (!mergeResult) {
@@ -162,7 +160,6 @@ function StatItem({
     </View>
   )
 }
-
 
 const styles = StyleSheet.create({
   container: {
