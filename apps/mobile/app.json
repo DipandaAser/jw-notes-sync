@@ -17,15 +17,7 @@
       "infoPlist": {
         "CFBundleDocumentTypes": [
           {
-            "CFBundleTypeName": "JW Library Backup",
-            "CFBundleTypeRole": "Viewer",
-            "LSHandlerRank": "Default",
-            "LSItemContentTypes": [
-              "public.zip-archive"
-            ]
-          },
-          {
-            "CFBundleTypeName": "JW Library Backup",
+            "CFBundleTypeName": "JW Notes Sync",
             "CFBundleTypeRole": "Viewer",
             "LSHandlerRank": "Default",
             "LSItemContentTypes": [
@@ -44,42 +36,6 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "intentFilters": [
-        {
-          "action": "VIEW",
-          "category": [
-            "DEFAULT",
-            "BROWSABLE"
-          ],
-          "data": [
-            {
-              "scheme": "content"
-            },
-            {
-              "mimeType": "*/*"
-            },
-            {
-              "pathPattern": ".*\\.jwlibrary"
-            }
-          ]
-        },
-        {
-          "action": "VIEW",
-          "category": [
-            "DEFAULT",
-            "BROWSABLE"
-          ],
-          "data": [
-            {
-              "scheme": "file"
-            },
-            {
-              "mimeType": "*/*"
-            },
-            {
-              "pathPattern": ".*\\.jwlibrary"
-            }
-          ]
-        },
         {
           "action": "VIEW",
           "category": [
