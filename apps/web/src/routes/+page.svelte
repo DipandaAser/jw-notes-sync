@@ -1,12 +1,14 @@
-<svelte:head>
-	<title>JW Notes Sync</title>
-</svelte:head>
+<script lang="ts">
+	import { appState } from '$lib/stores/app.svelte';
+	import ImportScreen from '$lib/components/ImportScreen.svelte';
+	import MergeScreen from '$lib/components/MergeScreen.svelte';
+	import ExportScreen from '$lib/components/ExportScreen.svelte';
+</script>
 
-<div class="flex min-h-screen items-center justify-center bg-gray-50 font-sans">
-	<div class="text-center">
-		<h1 class="mb-4 text-4xl font-bold text-[#4a6da7]">JW Notes Sync</h1>
-		<p class="text-lg text-gray-600">
-			Fusionnez vos notes JW Library sans rien perdre.
-		</p>
-	</div>
-</div>
+{#if appState.screen === 'import'}
+	<ImportScreen />
+{:else if appState.screen === 'merge'}
+	<MergeScreen />
+{:else if appState.screen === 'export'}
+	<ExportScreen />
+{/if}

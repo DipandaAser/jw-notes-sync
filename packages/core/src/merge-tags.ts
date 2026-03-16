@@ -91,14 +91,22 @@ export function mergeTagMaps(
   const origins: { oldId: number; idMap: IdMap }[][] = [];
 
   function processEntry(tm: TagMap, idMap: IdMap): void {
+    // If PlaylistItemId references a playlist item that wasn't mapped, skip this entry
+    // (the CHECK constraint requires exactly one of NoteId/LocationId/PlaylistItemId to be non-null)
+    let playlistItemId: number | null = null;
+    if (tm.PlaylistItemId !== null) {
+      const resolved = idMap.tryGet('PlaylistItem', tm.PlaylistItemId);
+      if (resolved === undefined) return; // skip orphaned entry
+      playlistItemId = resolved;
+    }
+
     const remapped: TagMap = {
       ...tm,
       TagMapId: 0, // placeholder, assigned later
       TagId: idMap.get('Tag', tm.TagId),
       NoteId: tm.NoteId !== null ? idMap.get('Note', tm.NoteId) : null,
       LocationId: tm.LocationId !== null ? idMap.get('Location', tm.LocationId) : null,
-      PlaylistItemId:
-        tm.PlaylistItemId !== null ? idMap.get('PlaylistItem', tm.PlaylistItemId) : null,
+      PlaylistItemId: playlistItemId,
       Position: 0, // recalculated below
     };
 

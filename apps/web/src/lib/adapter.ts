@@ -10,10 +10,7 @@ function getSqlJs(): Promise<SqlJsStatic> {
     const isBrowser = typeof window !== 'undefined';
     sqlJsPromise = initSqlJs(
       isBrowser
-        ? {
-            locateFile: (file: string) =>
-              `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.12.0/${file}`,
-          }
+        ? { locateFile: () => `${import.meta.env.BASE_URL}sql-wasm.wasm` }
         : undefined,
     ) as Promise<SqlJsStatic>;
   }
