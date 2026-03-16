@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Pressable, useColorScheme } from 'react-native'
 import { useRouter } from 'expo-router';
 import { useAppStore } from '../src/stores/app';
 import { runMerge } from '../src/lib/merge';
+import { getColors } from '../src/theme';
 
 export default function MergeScreen() {
   const router = useRouter();
@@ -90,27 +91,6 @@ export default function MergeScreen() {
   );
 }
 
-function getColors(isDark: boolean) {
-  return isDark
-    ? {
-        bg: '#0f0f1e',
-        text: '#e8e8f0',
-        textMuted: '#8888a0',
-        border: '#2a2a40',
-        primary: '#4a6cf7',
-        success: '#34d399',
-        error: '#f87171',
-      }
-    : {
-        bg: '#ffffff',
-        text: '#1a1a2e',
-        textMuted: '#6b7280',
-        border: '#e5e7eb',
-        primary: '#4a6cf7',
-        success: '#059669',
-        error: '#dc2626',
-      };
-}
 
 const styles = StyleSheet.create({
   container: {

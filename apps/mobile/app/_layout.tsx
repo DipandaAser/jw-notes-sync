@@ -3,10 +3,12 @@ import { useEffect } from 'react';
 import { useColorScheme } from 'react-native';
 import * as Linking from 'expo-linking';
 import { importFromUri } from '../src/lib/import';
+import { getColors } from '../src/theme';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const colors = getColors(isDark);
 
   useEffect(() => {
     // Handle incoming file shares
@@ -38,14 +40,14 @@ export default function RootLayout() {
     <Stack
       screenOptions={{
         headerStyle: {
-          backgroundColor: isDark ? '#1a1a2e' : '#f8f9fa',
+          backgroundColor: colors.card,
         },
-        headerTintColor: isDark ? '#e0e0e0' : '#1a1a2e',
+        headerTintColor: colors.text,
         headerTitleStyle: {
           fontWeight: '600',
         },
         contentStyle: {
-          backgroundColor: isDark ? '#0f0f1e' : '#ffffff',
+          backgroundColor: colors.bg,
         },
       }}
     >

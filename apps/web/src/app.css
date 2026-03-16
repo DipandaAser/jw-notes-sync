@@ -1,35 +1,33 @@
 @import 'tailwindcss';
 
 @theme {
-	/* JW.org-inspired palette */
-	--color-jw-steel: #4a6da7;
-	--color-jw-steel-dark: #3b5998;
-	--color-jw-steel-darker: #2b4170;
-	--color-jw-header: #36425c;
-	--color-jw-warm: #b07d4f;
+	/* JW Library purple palette */
+	--color-jw-purple: #4d2d8e;
+	--color-jw-purple-light: #6b4bb5;
+	--color-jw-purple-dark: #3a1f6e;
 
-	--font-sans: 'Noto Sans', -apple-system, 'Segoe UI', Roboto, sans-serif;
+	--font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
 }
 
 /* ── Design tokens ─────────────────────────────────────── */
 
 :root {
 	--surface-0: #ffffff;
-	--surface-1: #f7f8fa;
-	--surface-2: #eef0f4;
-	--surface-3: #e2e5eb;
+	--surface-1: #f8f8fa;
+	--surface-2: #f0f0f4;
+	--surface-3: #e4e4ea;
 
-	--text-primary: #212121;
-	--text-secondary: #5a5a5a;
-	--text-tertiary: #8a8a8a;
+	--text-primary: #1c1b2e;
+	--text-secondary: #5a5766;
+	--text-tertiary: #8e8c9a;
 
-	--accent: #4a6da7;
-	--accent-hover: #3b5998;
-	--accent-subtle: #e8eef6;
+	--accent: #4d2d8e;
+	--accent-hover: #6b4bb5;
+	--accent-subtle: #f0ebf7;
 	--accent-text: #ffffff;
 
-	--warm: #b07d4f;
-	--warm-subtle: #f5efe8;
+	--warm: #c49029;
+	--warm-subtle: #fdf4e1;
 
 	--success: #4a8c5c;
 	--success-subtle: #e8f5eb;
@@ -38,11 +36,14 @@
 	--danger: #c0392b;
 	--danger-subtle: #fce8e6;
 
-	--border: #dde0e6;
-	--border-strong: #c0c5cf;
+	--note-card-bg: #f5e6e0;
+	--tag-bg: #e8e7ed;
 
-	--shadow-sm: 0 1px 3px rgba(54, 66, 92, 0.08);
-	--shadow-md: 0 4px 12px rgba(54, 66, 92, 0.1);
+	--border: #e0dfe6;
+	--border-strong: #c8c6d0;
+
+	--shadow-sm: 0 1px 2px rgba(28, 27, 46, 0.05);
+	--shadow-md: 0 2px 8px rgba(28, 27, 46, 0.08);
 
 	--radius-sm: 4px;
 	--radius-md: 8px;
@@ -52,27 +53,36 @@
 }
 
 [data-theme='dark'] {
-	--surface-0: #1a1f2e;
-	--surface-1: #232838;
-	--surface-2: #2d3344;
-	--surface-3: #383f52;
+	--surface-0: #1c1b2e;
+	--surface-1: #252438;
+	--surface-2: #2f2e44;
+	--surface-3: #3a3952;
 
-	--text-primary: #e8eaef;
-	--text-secondary: #a0a5b5;
-	--text-tertiary: #6b7080;
+	--text-primary: #e8e7f0;
+	--text-secondary: #a09db5;
+	--text-tertiary: #6b6880;
 
-	--accent: #7a9fd4;
-	--accent-hover: #92b3e0;
-	--accent-subtle: #2a3550;
-	--accent-text: #1a1f2e;
+	--accent: #9b7ad8;
+	--accent-hover: #b094e4;
+	--accent-subtle: #2a2044;
+	--accent-text: #1c1b2e;
 
-	--warm: #c99a65;
+	--warm: #d4a03a;
+	--warm-subtle: #2e2718;
 
-	--border: #333a4d;
-	--border-strong: #454d63;
+	--success: #34d399;
+	--success-subtle: #1a2e24;
+	--danger: #f87171;
+	--danger-subtle: #2e1a1a;
 
-	--shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-	--shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+	--note-card-bg: #2d2445;
+	--tag-bg: #3a3852;
+
+	--border: #35334a;
+	--border-strong: #47455f;
+
+	--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+	--shadow-md: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 /* ── Base ──────────────────────────────────────────────── */

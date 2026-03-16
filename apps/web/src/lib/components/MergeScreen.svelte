@@ -103,8 +103,8 @@
 		<div class="mb-6 text-center" style="color: var(--text-tertiary);">↓</div>
 		<div class="text-center">
 			<button
-				class="rounded-lg px-8 py-4 text-base font-semibold tracking-tight transition-all hover:-translate-y-0.5"
-				style="background: var(--accent); color: var(--accent-text); box-shadow: var(--shadow-sm);"
+				class="rounded-xl px-8 py-4 text-base font-semibold tracking-tight transition-all hover:-translate-y-0.5"
+				style="background: var(--accent); color: var(--accent-text);"
 				onclick={startMerge}
 			>
 				Fusionner les sauvegardes

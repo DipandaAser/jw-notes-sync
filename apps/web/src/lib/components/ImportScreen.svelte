@@ -145,8 +145,8 @@
 	<div class="mb-8 flex flex-col gap-3">
 		{#each appState.backups as backup (backup.id)}
 			<div
-				class="grid items-center gap-4 rounded-lg border px-6 py-4 transition-all"
-				style="grid-template-columns: auto 1fr auto auto; background: var(--surface-1); border-color: var(--border);"
+				class="grid items-center gap-4 rounded-xl border border-l-4 px-6 py-4 transition-all"
+				style="grid-template-columns: auto 1fr auto auto; background: var(--surface-1); border-color: var(--border); border-left-color: var(--accent);"
 			>
 				<div
 					class="grid h-11 w-11 place-items-center rounded text-xl"
@@ -205,8 +205,8 @@
 	{#if appState.canMerge()}
 		<div class="text-center">
 			<button
-				class="rounded-lg px-8 py-4 text-base font-semibold tracking-tight transition-all hover:-translate-y-0.5"
-				style="background: var(--accent); color: var(--accent-text); box-shadow: var(--shadow-sm);"
+				class="rounded-xl px-8 py-4 text-base font-semibold tracking-tight transition-all hover:-translate-y-0.5"
+				style="background: var(--accent); color: var(--accent-text);"
 				onclick={goToMerge}
 			>
 				Fusionner {appState.backups.length} sauvegardes →
