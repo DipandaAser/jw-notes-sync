@@ -15,7 +15,7 @@ import type { IdMap } from './id-map.js';
 /**
  * Merge IndependentMedia tables from two databases.
  *
- * **Merge order: 9** — no FK dependencies.
+ * **Merge order: 4a** — no FK dependencies.
  * Populates `IndependentMedia` mappings.
  *
  * Strategy: deduplicate by Hash — same hash = same file, keep one.
@@ -63,7 +63,7 @@ export function mergeIndependentMedia(
 /**
  * Merge PlaylistItemAccuracy tables from two databases.
  *
- * **Merge order: 9** — no FK dependencies (reference/enum table).
+ * **Merge order: 4b** — no FK dependencies (reference/enum table).
  * Populates `PlaylistItemAccuracy` mappings.
  *
  * Strategy: deduplicate by Description.
@@ -109,16 +109,17 @@ export function mergePlaylistItemAccuracy(
 
 /**
  * Build a natural key for PlaylistItem deduplication.
- * Label + Accuracy + EndAction uniquely identifies a playlist item across devices.
+ * Uses remapped accuracy (not the raw source FK) so items from devices
+ * with different PlaylistItemAccuracy IDs still deduplicate correctly.
  */
-function playlistItemNaturalKey(item: PlaylistItem): string {
-  return `${item.Label}|${item.Accuracy}|${item.EndAction}|${item.ThumbnailFilePath ?? ''}`;
+function playlistItemNaturalKey(item: PlaylistItem, remappedAccuracy: number): string {
+  return `${item.Label}|${remappedAccuracy}|${item.EndAction}|${item.ThumbnailFilePath ?? ''}`;
 }
 
 /**
  * Merge PlaylistItem tables from two databases.
  *
- * **Merge order: 10** — depends on PlaylistItemAccuracy (step 9).
+ * **Merge order: 4c** — depends on PlaylistItemAccuracy (step 4b).
  * Populates `PlaylistItem` mappings used by markers and join tables.
  *
  * Strategy: deduplicate by natural key (Label + Accuracy + EndAction + ThumbnailFilePath).
@@ -141,7 +142,7 @@ export function mergePlaylistItems(
     const accuracy = idMapA.tryGet('PlaylistItemAccuracy', item.Accuracy);
     if (accuracy === undefined) continue; // orphaned row — skip
     const newId = nextId++;
-    const key = playlistItemNaturalKey(item);
+    const key = playlistItemNaturalKey(item, accuracy);
     merged.push({ ...item, PlaylistItemId: newId, Accuracy: accuracy });
     seen.set(key, newId);
     idMapA.set(TABLE, item.PlaylistItemId, newId);
@@ -150,7 +151,7 @@ export function mergePlaylistItems(
   for (const item of itemsB) {
     const accuracy = idMapB.tryGet('PlaylistItemAccuracy', item.Accuracy);
     if (accuracy === undefined) continue; // orphaned row — skip
-    const key = playlistItemNaturalKey(item);
+    const key = playlistItemNaturalKey(item, accuracy);
     const existingNewId = seen.get(key);
 
     if (existingNewId !== undefined) {
@@ -175,7 +176,7 @@ export function mergePlaylistItems(
 /**
  * Merge PlaylistItemMarker tables from two databases.
  *
- * **Merge order: 11** — depends on PlaylistItem (step 10).
+ * **Merge order: 4d** — depends on PlaylistItem (step 4c).
  * Populates `PlaylistItemMarker` mappings.
  *
  * Strategy: follow parent — keep all markers, remap PlaylistItemId.
@@ -217,7 +218,7 @@ export function mergePlaylistItemMarkers(
 /**
  * Merge PlaylistItemLocationMap tables.
  *
- * **Merge order: 12** — depends on PlaylistItem (step 10), Location (step 1).
+ * **Merge order: 4e** — depends on PlaylistItem (step 4c), Location (step 0).
  * Remaps PlaylistItemId + LocationId.
  */
 export function mergePlaylistItemLocationMaps(
@@ -255,8 +256,8 @@ export function mergePlaylistItemLocationMaps(
 /**
  * Merge PlaylistItemIndependentMediaMap tables.
  *
- * **Merge order: 12** — depends on PlaylistItem (step 10),
- * IndependentMedia (step 9).
+ * **Merge order: 4e** — depends on PlaylistItem (step 4c),
+ * IndependentMedia (step 4a).
  * Remaps PlaylistItemId + IndependentMediaId.
  */
 export function mergePlaylistItemIndependentMediaMaps(
@@ -294,7 +295,7 @@ export function mergePlaylistItemIndependentMediaMaps(
 /**
  * Merge PlaylistItemMarkerBibleVerseMap tables.
  *
- * **Merge order: 13** — depends on PlaylistItemMarker (step 11).
+ * **Merge order: 4f** — depends on PlaylistItemMarker (step 4d).
  * Remaps PlaylistItemMarkerId.
  */
 export function mergePlaylistItemMarkerBibleVerseMaps(
@@ -304,16 +305,23 @@ export function mergePlaylistItemMarkerBibleVerseMaps(
   idMapB: IdMap,
 ): PlaylistItemMarkerBibleVerseMap[] {
   const merged: PlaylistItemMarkerBibleVerseMap[] = [];
+  const seen = new Set<string>(); // "PlaylistItemMarkerId|VerseId"
 
   for (const m of mapsA) {
     const mid = idMapA.tryGet('PlaylistItemMarker', m.PlaylistItemMarkerId);
     if (mid === undefined) continue;
+    const key = `${mid}|${m.VerseId}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
     merged.push({ ...m, PlaylistItemMarkerId: mid });
   }
 
   for (const m of mapsB) {
     const mid = idMapB.tryGet('PlaylistItemMarker', m.PlaylistItemMarkerId);
     if (mid === undefined) continue;
+    const key = `${mid}|${m.VerseId}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
     merged.push({ ...m, PlaylistItemMarkerId: mid });
   }
 
@@ -323,7 +331,7 @@ export function mergePlaylistItemMarkerBibleVerseMaps(
 /**
  * Merge PlaylistItemMarkerParagraphMap tables.
  *
- * **Merge order: 13** — depends on PlaylistItemMarker (step 11).
+ * **Merge order: 4f** — depends on PlaylistItemMarker (step 4d).
  * Remaps PlaylistItemMarkerId.
  */
 export function mergePlaylistItemMarkerParagraphMaps(
@@ -333,16 +341,23 @@ export function mergePlaylistItemMarkerParagraphMaps(
   idMapB: IdMap,
 ): PlaylistItemMarkerParagraphMap[] {
   const merged: PlaylistItemMarkerParagraphMap[] = [];
+  const seen = new Set<string>(); // "MarkerId|MepsDocumentId|ParagraphIndex|MarkerIndex"
 
   for (const m of mapsA) {
     const mid = idMapA.tryGet('PlaylistItemMarker', m.PlaylistItemMarkerId);
     if (mid === undefined) continue;
+    const key = `${mid}|${m.MepsDocumentId}|${m.ParagraphIndex}|${m.MarkerIndexWithinParagraph}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
     merged.push({ ...m, PlaylistItemMarkerId: mid });
   }
 
   for (const m of mapsB) {
     const mid = idMapB.tryGet('PlaylistItemMarker', m.PlaylistItemMarkerId);
     if (mid === undefined) continue;
+    const key = `${mid}|${m.MepsDocumentId}|${m.ParagraphIndex}|${m.MarkerIndexWithinParagraph}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
     merged.push({ ...m, PlaylistItemMarkerId: mid });
   }
 

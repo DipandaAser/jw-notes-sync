@@ -355,6 +355,29 @@ describe('mergePlaylistItemLocationMaps', () => {
     expect(merged[1]!.LocationId).toBe(3);
   });
 
+  it('should deduplicate entries with same composite key after remapping', () => {
+    const idMapA = new IdMap();
+    const idMapB = new IdMap();
+    // Both devices map to the same PlaylistItem and Location
+    idMapA.set('PlaylistItem', 1, 1);
+    idMapA.set('Location', 5, 10);
+    idMapB.set('PlaylistItem', 20, 1); // same new PlaylistItem ID
+    idMapB.set('Location', 30, 10);    // same new Location ID
+
+    const mapsA: PlaylistItemLocationMap[] = [
+      { PlaylistItemId: 1, LocationId: 5, MajorMultimediaType: 0, BaseDurationTicks: 1000 },
+    ];
+    const mapsB: PlaylistItemLocationMap[] = [
+      { PlaylistItemId: 20, LocationId: 30, MajorMultimediaType: 0, BaseDurationTicks: 1000 },
+    ];
+
+    const merged = mergePlaylistItemLocationMaps(mapsA, mapsB, idMapA, idMapB);
+
+    expect(merged).toHaveLength(1);
+    expect(merged[0]!.PlaylistItemId).toBe(1);
+    expect(merged[0]!.LocationId).toBe(10);
+  });
+
   it('should handle empty sources', () => {
     const { idMapA, idMapB } = setup();
     expect(mergePlaylistItemLocationMaps([], [], idMapA, idMapB)).toHaveLength(0);
