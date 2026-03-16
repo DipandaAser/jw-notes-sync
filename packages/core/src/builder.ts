@@ -209,6 +209,46 @@ WITHOUT ROWID`,
   `CREATE TABLE android_metadata (locale TEXT)`,
 ];
 
+// ── Indexes ────────────────────────────────────────────────
+
+const SCHEMA_INDEXES = [
+  `CREATE INDEX IX_BlockRange_UserMarkId ON BlockRange(UserMarkId)`,
+  `CREATE INDEX IX_Location_KeySymbol_MepsLanguage_BookNumber_ChapterNumber ON Location(KeySymbol, MepsLanguage, BookNumber, ChapterNumber)`,
+  `CREATE INDEX IX_Location_MepsLanguage_DocumentId ON Location(MepsLanguage, DocumentId)`,
+  `CREATE INDEX IX_Note_LastModified_LocationId ON Note(LastModified, LocationId)`,
+  `CREATE INDEX IX_Note_LocationId_BlockIdentifier ON Note(LocationId, BlockIdentifier)`,
+  `CREATE INDEX IX_PlaylistItemIndependentMediaMap_IndependentMediaId ON PlaylistItemIndependentMediaMap(IndependentMediaId)`,
+  `CREATE INDEX IX_PlaylistItemLocationMap_LocationId ON PlaylistItemLocationMap(LocationId)`,
+  `CREATE INDEX IX_PlaylistItem_ThumbnailFilePath ON PlaylistItem(ThumbnailFilePath)`,
+  `CREATE INDEX IX_TagMap_LocationId_TagId_Position ON TagMap(LocationId, TagId, Position)`,
+  `CREATE INDEX IX_TagMap_NoteId_TagId_Position ON TagMap(NoteId, TagId, Position)`,
+  `CREATE INDEX IX_TagMap_PlaylistItemId_TagId_Position ON TagMap(PlaylistItemId, TagId, Position)`,
+  `CREATE INDEX IX_TagMap_TagId ON TagMap(TagId)`,
+  `CREATE INDEX IX_UserMark_LocationId ON UserMark(LocationId)`,
+];
+
+// ── Triggers (created AFTER data insertion) ────────────────
+
+function lastModifiedTriggers(table: string): string[] {
+  return [
+    `CREATE TRIGGER TR_Update_LastModified_Insert_${table} INSERT ON ${table} BEGIN UPDATE LastModified SET LastModified = strftime('%Y-%m-%dT%H:%M:%SZ', 'now'); END`,
+    `CREATE TRIGGER TR_Update_LastModified_Update_${table} UPDATE ON ${table} BEGIN UPDATE LastModified SET LastModified = strftime('%Y-%m-%dT%H:%M:%SZ', 'now'); END`,
+    `CREATE TRIGGER TR_Update_LastModified_Delete_${table} DELETE ON ${table} BEGIN UPDATE LastModified SET LastModified = strftime('%Y-%m-%dT%H:%M:%SZ', 'now'); END`,
+  ];
+}
+
+const SCHEMA_TRIGGERS = [
+  ...lastModifiedTriggers('Tag'),
+  ...lastModifiedTriggers('TagMap'),
+  ...lastModifiedTriggers('Note'),
+  ...lastModifiedTriggers('Bookmark'),
+  ...lastModifiedTriggers('UserMark'),
+  ...lastModifiedTriggers('BlockRange'),
+  ...lastModifiedTriggers('IndependentMedia'),
+  `CREATE TRIGGER TR_Raise_Error_Before_Insert_LastModified BEFORE INSERT ON LastModified BEGIN SELECT RAISE (FAIL, 'INSERT INTO LastModified not allowed'); END`,
+  `CREATE TRIGGER TR_Raise_Error_Before_Delete_LastModified BEFORE DELETE ON LastModified BEGIN SELECT RAISE (FAIL, 'DELETE FROM LastModified not allowed'); END`,
+];
+
 // ── Insert helpers ──────────────────────────────────────────
 
 async function insertRows<T extends object>(
@@ -256,10 +296,14 @@ export async function buildArchive(
   const db = await adapter.createDatabase();
 
   try {
-    // 1. Create schema
+    // 1. Create schema (tables + indexes)
     await adapter.executeRun(db, 'PRAGMA foreign_keys = OFF');
+    await adapter.executeRun(db, 'PRAGMA user_version = 14');
     for (const ddl of SCHEMA_DDL) {
       await adapter.executeRun(db, ddl);
+    }
+    for (const idx of SCHEMA_INDEXES) {
+      await adapter.executeRun(db, idx);
     }
 
     // 2. Insert data in dependency order (single transaction for performance)
@@ -348,7 +392,12 @@ export async function buildArchive(
     );
     await adapter.executeRun(db, 'COMMIT');
 
-    // 3. Validate FK constraints
+    // 3. Create triggers (after data insertion to avoid LastModified conflicts)
+    for (const trigger of SCHEMA_TRIGGERS) {
+      await adapter.executeRun(db, trigger);
+    }
+
+    // 5. Validate FK constraints
     await adapter.executeRun(db, 'PRAGMA foreign_keys = ON');
     const fkErrors = await adapter.executeQuery(db, 'PRAGMA foreign_key_check');
     if (fkErrors.length > 0) {
@@ -357,17 +406,17 @@ export async function buildArchive(
       );
     }
 
-    // 4. Export database bytes
+    // 6. Export database bytes
     const dbBytes = await adapter.exportDatabase(db);
 
-    // 5. Compute hash
+    // 7. Compute hash
     const hash = await adapter.hashSHA256(dbBytes);
 
-    // 6. Build manifest
+    // 8. Build manifest
     const dateStr = now.split('T')[0]!;
     const manifest: Manifest = {
-      name: `MergedBackup_${dateStr}`,
-      creationDate: now,
+      name: `MergedBackup_${dateStr}.jwlibrary`,
+      creationDate: dateStr,
       version: 1,
       type: 0,
       userDataBackup: {
@@ -379,9 +428,9 @@ export async function buildArchive(
       },
     };
 
-    const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest, null, 2));
+    const manifestBytes = new TextEncoder().encode(JSON.stringify(manifest));
 
-    // 7. Pack ZIP
+    // 9. Pack ZIP
     const entries: ZipEntry[] = [
       { path: 'manifest.json', data: manifestBytes },
       { path: DB_NAME, data: dbBytes },

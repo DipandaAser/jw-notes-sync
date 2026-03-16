@@ -115,25 +115,31 @@ async function loadDatabase(
     androidMetadata: null,
   };
 
-  // Query all tables in parallel
-  const queries = tables.map(async (table) => {
+  // Get actual tables present in the database
+  const tableInfoRows = await adapter.executeQuery(
+    db,
+    `SELECT name FROM sqlite_master WHERE type='table'`,
+  );
+  const existingTables = new Set(tableInfoRows.map((r) => r['name'] as string));
+
+  // Query tables sequentially (expo-sqlite doesn't support concurrent queries)
+  for (const table of tables) {
+    if (!existingTables.has(table)) continue;
     const rows = await adapter.executeQuery(db, `SELECT * FROM ${table}`);
 
     if (table === 'LastModified') {
       result.lastModified = (rows[0]?.['LastModified'] as string | undefined) ?? '';
-      return;
+      continue;
     }
     if (table === 'android_metadata') {
       result.androidMetadata = (rows[0]?.['locale'] as string | undefined) ?? null;
-      return;
+      continue;
     }
 
     const key = TABLE_KEY_MAP[table];
     if (key) {
       (result[key] as unknown[]) = rows;
     }
-  });
-
-  await Promise.all(queries);
+  }
   return result;
 }

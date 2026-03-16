@@ -106,7 +106,7 @@ export const webAdapter: PlatformAdapter = {
     for (const entry of entries) {
       zip.file(entry.path, entry.data);
     }
-    return zip.generateAsync({ type: 'uint8array' });
+    return zip.generateAsync({ type: 'uint8array', compression: 'DEFLATE' });
   },
 
   // ── Hashing ─────────────────────────────────────────────
