@@ -77,9 +77,9 @@ pnpm --filter @jw-notes-sync/web build
 
 ## .jwlibrary File Format
 
-A `.jwlibrary` file is a ZIP archive containing:
+A `.jwlibrary` file is a DEFLATE-compressed ZIP archive containing:
 - `manifest.json` — metadata (device name, date, schema version, DB hash)
-- `userData.db` — SQLite database (schema v14) with 18 tables
+- `userData.db` — SQLite database (schema v14) with 18 tables, 13 indexes, and 23 triggers
 - Media files — images and thumbnails referenced by playlists
 
 ### Key Database Tables
@@ -94,6 +94,18 @@ A `.jwlibrary` file is a ZIP archive containing:
 | `BlockRange` | Highlight text ranges | `UserMarkId` parent |
 | `InputField` | Form field values | `LocationId + TextTag` |
 | `PlaylistItem` | Media playlist entries | `Label` + media refs |
+
+### Android Compatibility
+
+JW Library on Android is strict about the archive format. The generated file must have:
+
+- `PRAGMA user_version = 14` and `journal_mode = delete` (not WAL)
+- All 13 indexes and 23 triggers present in the schema
+- DEFLATE-compressed ZIP (not STORE)
+- `creationDate` as date-only (`YYYY-MM-DD`), `name` with `.jwlibrary` extension
+- Correct SHA-256 hash of the raw database bytes in the manifest
+
+See the full [Technical Notes in PLAN.md](./PLAN.md#jwlibrary-file-format--technical-notes) for details.
 
 ## License
 

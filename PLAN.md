@@ -371,6 +371,8 @@ These are undocumented requirements discovered through testing with real JW Libr
 | `PRAGMA foreign_keys` | Passes `PRAGMA foreign_key_check` | All FK references must be valid. Orphaned rows (e.g., TagMap referencing a missing PlaylistItem) cause CHECK constraint failures. |
 | All 18 tables present | Even if empty | The schema must include all tables from v14, including `android_metadata` and `LastModified`. |
 | `android_metadata` table | Must contain a `locale` row (e.g. `en_US`) | Required for Android compatibility. |
+| Indexes | All 13 indexes must be present | Includes `IX_BlockRange_UserMarkId`, `IX_TagMap_TagId`, `IX_UserMark_LocationId`, etc. |
+| Triggers | All 23 triggers must be present | 21 `LastModified` auto-update triggers (insert/update/delete on 7 tables) + 2 protection triggers preventing direct INSERT/DELETE on `LastModified`. |
 
 ### Manifest Requirements
 
@@ -379,8 +381,17 @@ These are undocumented requirements discovered through testing with real JW Libr
 | `userDataBackup.hash` | SHA-256 hex digest of the raw `userData.db` bytes. Must match exactly. |
 | `userDataBackup.schemaVersion` | `14` (current version as of 2026). |
 | `userDataBackup.databaseName` | `userData.db` |
+| `name` | Must include `.jwlibrary` extension (e.g. `MergedBackup_2026-03-16.jwlibrary`). |
+| `creationDate` | Date-only string (`YYYY-MM-DD`), **not** a full ISO timestamp. |
 | `version` | `1` |
 | `type` | `0` |
+
+### ZIP Archive Requirements
+
+| Requirement | Notes |
+| ----------- | ----- |
+| Compression method | Must use **DEFLATE** (`compress=8`). STORE (`compress=0`) produces uncompressed archives that Android JW Library rejects. |
+| File structure | Must contain `manifest.json`, `userData.db`, and any media files at the root level (no subdirectories). |
 
 ### Hash Verification
 
@@ -400,6 +411,9 @@ Some `.jwlibrary` backups (particularly from older versions or specific devices)
 | WAL journal mode | **Rejects** WAL databases | Accepts WAL |
 | Hash mismatch on import | Rejects | Sometimes tolerant |
 | `android_metadata` table | Required | Ignored |
+| Uncompressed ZIP (STORE) | **Rejects** | Accepts |
+| Missing indexes/triggers | **Rejects** | Accepts |
+| `creationDate` as ISO timestamp | **Rejects** | Accepts |
 
 ---
 
