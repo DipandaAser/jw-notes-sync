@@ -23,9 +23,18 @@
             "LSItemContentTypes": [
               "public.zip-archive"
             ]
+          },
+          {
+            "CFBundleTypeName": "JW Library Backup",
+            "CFBundleTypeRole": "Viewer",
+            "LSHandlerRank": "Default",
+            "LSItemContentTypes": [
+              "public.zip-archive"
+            ]
           }
         ]
-      }
+      },
+      "bundleIdentifier": "com.dipandaaser.jwnotessync"
     },
     "android": {
       "adaptiveIcon": {
@@ -70,8 +79,45 @@
               "pathPattern": ".*\\.jwlibrary"
             }
           ]
+        },
+        {
+          "action": "VIEW",
+          "category": [
+            "DEFAULT",
+            "BROWSABLE"
+          ],
+          "data": [
+            {
+              "scheme": "content"
+            },
+            {
+              "mimeType": "*/*"
+            },
+            {
+              "pathPattern": ".*\\.jwlibrary"
+            }
+          ]
+        },
+        {
+          "action": "VIEW",
+          "category": [
+            "DEFAULT",
+            "BROWSABLE"
+          ],
+          "data": [
+            {
+              "scheme": "file"
+            },
+            {
+              "mimeType": "*/*"
+            },
+            {
+              "pathPattern": ".*\\.jwlibrary"
+            }
+          ]
         }
-      ]
+      ],
+      "package": "com.dipandaaser.jwnotessync"
     },
     "plugins": [
       "expo-router",
