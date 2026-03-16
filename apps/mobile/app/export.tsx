@@ -10,6 +10,7 @@ import { useRouter } from "expo-router"
 import { File, Paths } from "expo-file-system"
 import * as Sharing from "expo-sharing"
 import { useAppStore } from "../src/stores/app"
+import { getColors } from "../src/theme"
 
 export default function ExportScreen() {
   const router = useRouter()
@@ -117,7 +118,7 @@ export default function ExportScreen() {
 
       <View style={styles.actions}>
         <Pressable
-          style={[styles.exportButton, { backgroundColor: colors.success }]}
+          style={[styles.exportButton, { backgroundColor: colors.primary }]}
           onPress={handleExport}
         >
           <Text style={styles.exportButtonText}>
@@ -162,39 +163,6 @@ function StatItem({
   )
 }
 
-function getColors(isDark: boolean) {
-  return isDark
-    ? {
-        bg: "#0f0f1e",
-        text: "#e8e8f0",
-        textMuted: "#8888a0",
-        card: "#1a1a2e",
-        border: "#2a2a40",
-        primary: "#4a6cf7",
-        success: "#34d399",
-        accent1: "#818cf8",
-        accent2: "#fbbf24",
-        accent3: "#f472b6",
-        accent4: "#34d399",
-        accent5: "#38bdf8",
-        accent6: "#a78bfa",
-      }
-    : {
-        bg: "#ffffff",
-        text: "#1a1a2e",
-        textMuted: "#6b7280",
-        card: "#f8f9fa",
-        border: "#e5e7eb",
-        primary: "#4a6cf7",
-        success: "#059669",
-        accent1: "#6366f1",
-        accent2: "#d97706",
-        accent3: "#db2777",
-        accent4: "#059669",
-        accent5: "#0284c7",
-        accent6: "#7c3aed",
-      }
-}
 
 const styles = StyleSheet.create({
   container: {

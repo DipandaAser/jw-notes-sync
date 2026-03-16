@@ -2,6 +2,7 @@ import { View, Text, StyleSheet, Pressable, FlatList, Alert, useColorScheme } fr
 import { useRouter } from 'expo-router';
 import { useAppStore } from '../src/stores/app';
 import { pickAndImportBackup } from '../src/lib/import';
+import { getColors } from '../src/theme';
 import { useState } from 'react';
 
 export default function ImportScreen() {
@@ -92,7 +93,7 @@ export default function ImportScreen() {
 
       {backups.length >= 2 && (
         <Pressable
-          style={[styles.mergeButton, { backgroundColor: colors.success }]}
+          style={[styles.mergeButton, { backgroundColor: colors.primary }]}
           onPress={handleMerge}
         >
           <Text style={styles.mergeButtonText}>
@@ -113,35 +114,6 @@ function StatBadge({ label, count, color }: { label: string; count: number; colo
   );
 }
 
-function getColors(isDark: boolean) {
-  return isDark
-    ? {
-        bg: '#0f0f1e',
-        text: '#e8e8f0',
-        textMuted: '#8888a0',
-        card: '#1a1a2e',
-        border: '#2a2a40',
-        primary: '#4a6cf7',
-        success: '#34d399',
-        accent1: '#818cf8',
-        accent2: '#fbbf24',
-        accent3: '#f472b6',
-        accent4: '#34d399',
-      }
-    : {
-        bg: '#ffffff',
-        text: '#1a1a2e',
-        textMuted: '#6b7280',
-        card: '#f8f9fa',
-        border: '#e5e7eb',
-        primary: '#4a6cf7',
-        success: '#059669',
-        accent1: '#6366f1',
-        accent2: '#d97706',
-        accent3: '#db2777',
-        accent4: '#059669',
-      };
-}
 
 const styles = StyleSheet.create({
   container: {

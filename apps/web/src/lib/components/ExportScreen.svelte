@@ -27,7 +27,12 @@
 {:else}
 	<!-- Success hero -->
 	<div class="mb-10 text-center">
-		<div class="mb-4 text-5xl">✓</div>
+		<div
+			class="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full text-2xl font-bold text-white"
+			style="background: var(--accent);"
+		>
+			✓
+		</div>
 		<h1 class="mb-2 text-3xl font-bold tracking-tight">Fusion terminée</h1>
 		<p class="text-base" style="color: var(--text-secondary);">
 			Vos {appState.backups.length} sauvegardes ont été fusionnées avec succès.
@@ -73,8 +78,8 @@
 	<!-- Download -->
 	<div class="text-center">
 		<button
-			class="rounded-lg px-8 py-4 text-base font-semibold tracking-tight transition-all hover:-translate-y-0.5"
-			style="background: var(--accent); color: var(--accent-text); box-shadow: var(--shadow-sm);"
+			class="rounded-xl px-8 py-4 text-base font-semibold tracking-tight transition-all hover:-translate-y-0.5"
+			style="background: var(--accent); color: var(--accent-text);"
 			onclick={downloadArchive}
 		>
 			Télécharger le fichier fusionné
