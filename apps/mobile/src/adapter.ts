@@ -107,7 +107,9 @@ export const nativeAdapter: PlatformAdapter = {
 
   async exportDatabase(db: Database): Promise<Uint8Array> {
     const { db: sqliteDb, file } = unwrap(db);
-    // Close to flush WAL journal
+    // Switch to rollback journal and checkpoint WAL so the .db file is self-contained
+    await sqliteDb.runAsync('PRAGMA wal_checkpoint(TRUNCATE)');
+    await sqliteDb.runAsync('PRAGMA journal_mode = DELETE');
     await sqliteDb.closeAsync();
 
     const base64 = await file.base64();
@@ -164,11 +166,10 @@ export const nativeAdapter: PlatformAdapter = {
   // ── Hashing ─────────────────────────────────────────────
 
   async hashSHA256(data: Uint8Array): Promise<string> {
-    const base64 = uint8ArrayToBase64(data);
-    return Crypto.digestStringAsync(
-      Crypto.CryptoDigestAlgorithm.SHA256,
-      base64,
-      { encoding: Crypto.CryptoEncoding.HEX },
-    );
+    const buffer = await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, data as Uint8Array<ArrayBuffer>);
+    const hashArray = new Uint8Array(buffer);
+    return Array.from(hashArray)
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
   },
 };
