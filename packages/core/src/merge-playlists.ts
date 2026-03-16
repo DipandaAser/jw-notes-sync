@@ -108,12 +108,21 @@ export function mergePlaylistItemAccuracy(
 // ── PlaylistItem ────────────────────────────────────────────
 
 /**
+ * Build a natural key for PlaylistItem deduplication.
+ * Label + Accuracy + EndAction uniquely identifies a playlist item across devices.
+ */
+function playlistItemNaturalKey(item: PlaylistItem): string {
+  return `${item.Label}|${item.Accuracy}|${item.EndAction}|${item.ThumbnailFilePath ?? ''}`;
+}
+
+/**
  * Merge PlaylistItem tables from two databases.
  *
  * **Merge order: 10** — depends on PlaylistItemAccuracy (step 9).
  * Populates `PlaylistItem` mappings used by markers and join tables.
  *
- * Strategy: keep both — all items from both sources are preserved.
+ * Strategy: deduplicate by natural key (Label + Accuracy + EndAction + ThumbnailFilePath).
+ * Same item on both devices → keep one, map both old IDs to the same new ID.
  * Remaps Accuracy FK.
  */
 export function mergePlaylistItems(
@@ -126,20 +135,33 @@ export function mergePlaylistItems(
   const merged: PlaylistItem[] = [];
   let nextId = 1;
 
+  const seen = new Map<string, number>(); // naturalKey → newId
+
   for (const item of itemsA) {
     const accuracy = idMapA.tryGet('PlaylistItemAccuracy', item.Accuracy);
     if (accuracy === undefined) continue; // orphaned row — skip
     const newId = nextId++;
+    const key = playlistItemNaturalKey(item);
     merged.push({ ...item, PlaylistItemId: newId, Accuracy: accuracy });
+    seen.set(key, newId);
     idMapA.set(TABLE, item.PlaylistItemId, newId);
   }
 
   for (const item of itemsB) {
     const accuracy = idMapB.tryGet('PlaylistItemAccuracy', item.Accuracy);
     if (accuracy === undefined) continue; // orphaned row — skip
-    const newId = nextId++;
-    merged.push({ ...item, PlaylistItemId: newId, Accuracy: accuracy });
-    idMapB.set(TABLE, item.PlaylistItemId, newId);
+    const key = playlistItemNaturalKey(item);
+    const existingNewId = seen.get(key);
+
+    if (existingNewId !== undefined) {
+      // Duplicate — map to the existing entry
+      idMapB.set(TABLE, item.PlaylistItemId, existingNewId);
+    } else {
+      const newId = nextId++;
+      merged.push({ ...item, PlaylistItemId: newId, Accuracy: accuracy });
+      seen.set(key, newId);
+      idMapB.set(TABLE, item.PlaylistItemId, newId);
+    }
   }
 
   idMapA.setCounter(TABLE, nextId);
@@ -205,11 +227,15 @@ export function mergePlaylistItemLocationMaps(
   idMapB: IdMap,
 ): PlaylistItemLocationMap[] {
   const merged: PlaylistItemLocationMap[] = [];
+  const seen = new Set<string>(); // "PlaylistItemId|LocationId"
 
   for (const m of mapsA) {
     const pid = idMapA.tryGet('PlaylistItem', m.PlaylistItemId);
     const lid = idMapA.tryGet('Location', m.LocationId);
     if (pid === undefined || lid === undefined) continue;
+    const key = `${pid}|${lid}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
     merged.push({ ...m, PlaylistItemId: pid, LocationId: lid });
   }
 
@@ -217,6 +243,9 @@ export function mergePlaylistItemLocationMaps(
     const pid = idMapB.tryGet('PlaylistItem', m.PlaylistItemId);
     const lid = idMapB.tryGet('Location', m.LocationId);
     if (pid === undefined || lid === undefined) continue;
+    const key = `${pid}|${lid}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
     merged.push({ ...m, PlaylistItemId: pid, LocationId: lid });
   }
 
@@ -237,11 +266,15 @@ export function mergePlaylistItemIndependentMediaMaps(
   idMapB: IdMap,
 ): PlaylistItemIndependentMediaMap[] {
   const merged: PlaylistItemIndependentMediaMap[] = [];
+  const seen = new Set<string>(); // "PlaylistItemId|IndependentMediaId"
 
   for (const m of mapsA) {
     const pid = idMapA.tryGet('PlaylistItem', m.PlaylistItemId);
     const mid = idMapA.tryGet('IndependentMedia', m.IndependentMediaId);
     if (pid === undefined || mid === undefined) continue;
+    const key = `${pid}|${mid}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
     merged.push({ ...m, PlaylistItemId: pid, IndependentMediaId: mid });
   }
 
@@ -249,6 +282,9 @@ export function mergePlaylistItemIndependentMediaMaps(
     const pid = idMapB.tryGet('PlaylistItem', m.PlaylistItemId);
     const mid = idMapB.tryGet('IndependentMedia', m.IndependentMediaId);
     if (pid === undefined || mid === undefined) continue;
+    const key = `${pid}|${mid}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
     merged.push({ ...m, PlaylistItemId: pid, IndependentMediaId: mid });
   }
 

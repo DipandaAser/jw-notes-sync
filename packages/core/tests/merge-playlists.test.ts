@@ -219,8 +219,8 @@ describe('mergePlaylistItems', () => {
 
   it('should assign sequential IDs', () => {
     const { idMapA, idMapB } = setupAccuracy();
-    const itemsA = [makePlaylistItem({ PlaylistItemId: 100 })];
-    const itemsB = [makePlaylistItem({ PlaylistItemId: 200 })];
+    const itemsA = [makePlaylistItem({ PlaylistItemId: 100, Label: 'Song X' })];
+    const itemsB = [makePlaylistItem({ PlaylistItemId: 200, Label: 'Song Y' })];
 
     const merged = mergePlaylistItems(itemsA, itemsB, idMapA, idMapB);
 
@@ -229,13 +229,25 @@ describe('mergePlaylistItems', () => {
 
   it('should populate ID mappings', () => {
     const { idMapA, idMapB } = setupAccuracy();
-    const itemsA = [makePlaylistItem({ PlaylistItemId: 5 })];
-    const itemsB = [makePlaylistItem({ PlaylistItemId: 15 })];
+    const itemsA = [makePlaylistItem({ PlaylistItemId: 5, Label: 'Song X' })];
+    const itemsB = [makePlaylistItem({ PlaylistItemId: 15, Label: 'Song Y' })];
 
     mergePlaylistItems(itemsA, itemsB, idMapA, idMapB);
 
     expect(idMapA.get('PlaylistItem', 5)).toBe(1);
     expect(idMapB.get('PlaylistItem', 15)).toBe(2);
+  });
+
+  it('should deduplicate identical playlist items across devices', () => {
+    const { idMapA, idMapB } = setupAccuracy();
+    const itemsA = [makePlaylistItem({ PlaylistItemId: 1, Label: 'Same Song' })];
+    const itemsB = [makePlaylistItem({ PlaylistItemId: 10, Label: 'Same Song' })];
+
+    const merged = mergePlaylistItems(itemsA, itemsB, idMapA, idMapB);
+
+    expect(merged).toHaveLength(1);
+    expect(idMapA.get('PlaylistItem', 1)).toBe(1);
+    expect(idMapB.get('PlaylistItem', 10)).toBe(1);
   });
 
   it('should handle empty sources', () => {
