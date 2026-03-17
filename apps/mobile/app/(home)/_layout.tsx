@@ -1,8 +1,10 @@
 import { Stack } from "expo-router"
 import { useColorScheme } from "react-native"
+import { useTranslation } from "react-i18next"
 import { getColors } from "../../src/theme"
 
 export default function HomeLayout() {
+  const { t } = useTranslation()
   const colorScheme = useColorScheme()
   const colors = getColors(colorScheme === "dark")
 
@@ -19,14 +21,14 @@ export default function HomeLayout() {
       <Stack.Screen
         name="merge"
         options={{
-          title: "Fusion",
+          title: t("merge.title"),
           gestureEnabled: false,
         }}
       />
       <Stack.Screen
         name="export"
         options={{
-          title: "Exporter",
+          title: t("export.title"),
           headerBackVisible: false,
         }}
       />

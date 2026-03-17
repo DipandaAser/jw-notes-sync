@@ -75,6 +75,39 @@ pnpm --filter @jw-notes-sync/core test
 pnpm --filter @jw-notes-sync/web build
 ```
 
+## Internationalization (i18n)
+
+The app supports **English** (default) and **French**, with a shared translation system across both platforms.
+
+### Architecture
+
+```text
+packages/i18n/          # Shared message source
+├── src/locales/fr.json # French translations (~70 keys)
+├── src/locales/en.json # English translations
+└── src/index.ts        # Exports messages, types, locale config
+```
+
+Both apps import `@jw-notes-sync/i18n` for translation strings and use **i18next** as the runtime:
+
+| Platform | Libraries                             | Detection            |
+|----------|---------------------------------------|----------------------|
+| Web      | `i18next` + Svelte 5 reactive `t()`   | `navigator.language` |
+| Mobile   | `i18next` + `react-i18next`           | `expo-localization`  |
+
+### Language Detection Logic
+
+1. On startup, the app detects the device/browser language
+2. If the user previously chose a language manually (in Settings), that preference is restored from storage (`localStorage` on web, `AsyncStorage` on mobile)
+3. When the app regains focus (tab visibility change on web, foreground on mobile), the device language is re-checked — but only if the user hasn't set a manual preference
+
+### Adding a New Language
+
+1. Create `packages/i18n/src/locales/{code}.json` (copy `fr.json` as template)
+2. Add the locale code to `supportedLocales` in `packages/i18n/src/index.ts`
+3. Register the resource in both `apps/web/src/lib/i18n.svelte.ts` and `apps/mobile/src/lib/i18n.ts`
+4. Add the language label to the Settings screen on both platforms
+
 ## .jwlibrary File Format
 
 A `.jwlibrary` file is a DEFLATE-compressed ZIP archive containing:

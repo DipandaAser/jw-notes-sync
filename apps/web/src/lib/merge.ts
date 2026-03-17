@@ -22,25 +22,26 @@ import {
 } from '@jw-notes-sync/core';
 import { webAdapter } from '$lib/adapter';
 import { appState, type MergeResult } from '$lib/stores/app.svelte';
+import { t } from '$lib/i18n.svelte';
 
-const MERGE_STEPS = [
-  'Locations',
-  'Surlignages',
-  'Notes',
-  'Signets',
-  'Playlists',
-  'Étiquettes',
-  'Formulaires',
-  'Exportation',
-];
+const MERGE_STEP_KEYS = [
+  'steps.locations',
+  'steps.highlights',
+  'steps.notes',
+  'steps.bookmarks',
+  'steps.playlists',
+  'steps.tags',
+  'steps.inputFields',
+  'steps.export',
+] as const;
 
 function updateProgress(stepIndex: number) {
-  const percent = Math.round(((stepIndex + 1) / MERGE_STEPS.length) * 100);
+  const percent = Math.round(((stepIndex + 1) / MERGE_STEP_KEYS.length) * 100);
   appState.mergeProgress = {
-    step: MERGE_STEPS[stepIndex]!,
+    step: t(MERGE_STEP_KEYS[stepIndex]!),
     percent,
-    steps: MERGE_STEPS.map((name, i) => ({
-      name,
+    steps: MERGE_STEP_KEYS.map((key, i) => ({
+      name: t(key),
       status: i < stepIndex ? 'done' : i === stepIndex ? 'current' : 'pending',
     })),
   };
@@ -148,9 +149,9 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
     appState.archiveBytes = archiveBytes;
     appState.mergeStatus = 'done';
     appState.mergeProgress = {
-      step: 'Terminé',
+      step: t('steps.done'),
       percent: 100,
-      steps: MERGE_STEPS.map((name) => ({ name, status: 'done' })),
+      steps: MERGE_STEP_KEYS.map((key) => ({ name: t(key), status: 'done' })),
     };
     appState.goTo('export');
   } catch (err) {

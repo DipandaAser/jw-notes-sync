@@ -16,6 +16,8 @@
 	},
 	"dependencies": {
 		"@jw-notes-sync/core": "workspace:*",
+		"@jw-notes-sync/i18n": "workspace:*",
+		"i18next": "^25.8.18",
 		"jszip": "^3.10.1",
 		"lucide-svelte": "^0.577.0",
 		"sql.js": "^1.14.1"

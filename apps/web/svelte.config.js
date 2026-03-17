@@ -14,7 +14,8 @@ const config = {
 		alias: {
 			'$components': 'src/lib/components',
 			'$stores': 'src/lib/stores',
-			'$assets': 'src/lib/assets'
+			'$assets': 'src/lib/assets',
+			'@jw-notes-sync/i18n': '../../packages/i18n/src/index.ts'
 		}
 	},
 	vitePlugin: {

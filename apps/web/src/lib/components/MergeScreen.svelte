@@ -2,6 +2,7 @@
 	import { appState } from '$lib/stores/app.svelte';
 	import { runMerge } from '$lib/merge';
 	import { Check, CircleDot, Circle, ArrowDown } from 'lucide-svelte';
+	import { t, getLocale } from '$lib/i18n.svelte';
 
 	function startMerge() {
 		if (appState.backups.length < 2) return;
@@ -12,7 +13,7 @@
 
 	function formatDate(iso: string): string {
 		try {
-			return new Date(iso).toLocaleDateString('fr-FR', {
+			return new Date(iso).toLocaleDateString(getLocale(), {
 				day: 'numeric',
 				month: 'long',
 				year: 'numeric',
@@ -28,13 +29,13 @@
 
 {#if !backupA || !backupB}
 	<div class="py-16 text-center">
-		<p style="color: var(--text-secondary);">Veuillez d'abord importer au moins 2 sauvegardes.</p>
+		<p style="color: var(--text-secondary);">{t('merge.noBackups')}</p>
 		<button
 			class="mt-4 rounded-lg px-6 py-3 font-semibold transition-all"
 			style="background: var(--accent); color: var(--accent-text);"
 			onclick={() => appState.goTo('import')}
 		>
-			← Retour à l'import
+			{t('merge.back')}
 		</button>
 	</div>
 {:else}
@@ -56,13 +57,13 @@
 			</div>
 			<div class="grid grid-cols-2 gap-3">
 				{#each [
-					{ value: backupA.stats.notes, label: 'Notes' },
-					{ value: backupA.stats.highlights, label: 'Surlignages' },
-					{ value: backupA.stats.bookmarks, label: 'Signets' },
-					{ value: backupA.stats.tags, label: 'Étiquettes' },
+					{ value: backupA.stats.notes, label: t('stats.notes') },
+					{ value: backupA.stats.highlights, label: t('stats.highlights') },
+					{ value: backupA.stats.bookmarks, label: t('stats.bookmarks') },
+					{ value: backupA.stats.tags, label: t('stats.tags') },
 				] as stat}
 					<div class="rounded p-3" style="background: var(--surface-2);">
-						<div class="text-xl font-bold tabular-nums">{stat.value.toLocaleString('fr-FR')}</div>
+						<div class="text-xl font-bold tabular-nums">{stat.value.toLocaleString(getLocale())}</div>
 						<div class="text-xs" style="color: var(--text-secondary);">{stat.label}</div>
 					</div>
 				{/each}
@@ -85,13 +86,13 @@
 			</div>
 			<div class="grid grid-cols-2 gap-3">
 				{#each [
-					{ value: backupB.stats.notes, label: 'Notes' },
-					{ value: backupB.stats.highlights, label: 'Surlignages' },
-					{ value: backupB.stats.bookmarks, label: 'Signets' },
-					{ value: backupB.stats.tags, label: 'Étiquettes' },
+					{ value: backupB.stats.notes, label: t('stats.notes') },
+					{ value: backupB.stats.highlights, label: t('stats.highlights') },
+					{ value: backupB.stats.bookmarks, label: t('stats.bookmarks') },
+					{ value: backupB.stats.tags, label: t('stats.tags') },
 				] as stat}
 					<div class="rounded p-3" style="background: var(--surface-2);">
-						<div class="text-xl font-bold tabular-nums">{stat.value.toLocaleString('fr-FR')}</div>
+						<div class="text-xl font-bold tabular-nums">{stat.value.toLocaleString(getLocale())}</div>
 						<div class="text-xs" style="color: var(--text-secondary);">{stat.label}</div>
 					</div>
 				{/each}
@@ -108,14 +109,14 @@
 				style="background: var(--accent); color: var(--accent-text);"
 				onclick={startMerge}
 			>
-				Fusionner les sauvegardes
+				{t('merge.button')}
 			</button>
 		</div>
 	{:else if appState.mergeStatus === 'merging'}
 		<!-- Progress -->
 		<div class="mb-8">
 			<div class="mb-3 flex items-baseline justify-between">
-				<span class="text-sm font-semibold">Fusion en cours…</span>
+				<span class="text-sm font-semibold">{t('merge.progress')}</span>
 				<span class="text-sm tabular-nums" style="color: var(--text-secondary);">
 					{appState.mergeProgress.percent}%
 				</span>
@@ -147,7 +148,7 @@
 			class="rounded-lg px-4 py-3 text-sm font-medium"
 			style="background: var(--danger-subtle); color: var(--danger);"
 		>
-			Erreur : {appState.mergeError}
+			{t('merge.errorPrefix', { message: appState.mergeError })}
 		</div>
 	{/if}
 {/if}
