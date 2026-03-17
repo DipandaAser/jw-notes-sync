@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Pressable, FlatList, Alert, useColorScheme } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Plus, Smartphone, X } from 'lucide-react-native';
+import { Plus } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../src/stores/app';
 import { pickAndImportBackup } from '../../src/lib/import';
 import { getColors } from '../../src/theme';
@@ -8,6 +9,7 @@ import { useState } from 'react';
 
 export default function ImportScreen() {
   const router = useRouter();
+  const { t, i18n } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const colors = getColors(isDark);
@@ -21,7 +23,7 @@ export default function ImportScreen() {
 
   function formatDate(iso: string): string {
     try {
-      return new Date(iso).toLocaleDateString('fr-FR', {
+      return new Date(iso).toLocaleDateString(i18n.language, {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
@@ -36,7 +38,7 @@ export default function ImportScreen() {
     try {
       await pickAndImportBackup();
     } catch (err) {
-      Alert.alert('Erreur', err instanceof Error ? err.message : String(err));
+      Alert.alert(t('common.error'), err instanceof Error ? err.message : String(err));
     } finally {
       setImporting(false);
     }
@@ -49,17 +51,17 @@ export default function ImportScreen() {
   }
 
   function handleRemove(id: string) {
-    Alert.alert('Supprimer', 'Retirer cette sauvegarde ?', [
-      { text: 'Annuler', style: 'cancel' },
-      { text: 'Supprimer', style: 'destructive', onPress: () => removeBackup(id) },
+    Alert.alert(t('import.backups.remove'), t('import.backups.removeConfirm'), [
+      { text: t('import.backups.cancel'), style: 'cancel' },
+      { text: t('import.backups.remove'), style: 'destructive', onPress: () => removeBackup(id) },
     ]);
   }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Importer des sauvegardes</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{t('import.title')}</Text>
       <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-        Sélectionnez au moins 2 fichiers .jwlibrary pour les fusionner
+        {t('import.subtitle')}
       </Text>
 
       <Pressable
@@ -70,7 +72,7 @@ export default function ImportScreen() {
         <View style={styles.importButtonContent}>
           <Plus color="#ffffff" size={18} />
           <Text style={styles.importButtonText}>
-            {importing ? 'Importation...' : 'Importer un fichier'}
+            {importing ? t('import.button.loading') : t('import.button')}
           </Text>
         </View>
       </Pressable>
@@ -83,7 +85,7 @@ export default function ImportScreen() {
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-              Aucune sauvegarde importée
+              {t('import.backups.empty')}
             </Text>
           </View>
         }
@@ -98,10 +100,10 @@ export default function ImportScreen() {
             </View>
             <Text style={[styles.fileName, { color: colors.textMuted }]}>{item.fileName}</Text>
             <View style={styles.statsRow}>
-              <StatBadge label="Notes" count={item.stats.notes} color={colors.accent1} />
-              <StatBadge label="Surlignages" count={item.stats.highlights} color={colors.accent2} />
-              <StatBadge label="Signets" count={item.stats.bookmarks} color={colors.accent3} />
-              <StatBadge label="Étiquettes" count={item.stats.tags} color={colors.accent4} />
+              <StatBadge label={t('stats.notes')} count={item.stats.notes} color={colors.accent1} />
+              <StatBadge label={t('stats.highlights')} count={item.stats.highlights} color={colors.accent2} />
+              <StatBadge label={t('stats.bookmarks')} count={item.stats.bookmarks} color={colors.accent3} />
+              <StatBadge label={t('stats.tags')} count={item.stats.tags} color={colors.accent4} />
             </View>
           </Pressable>
         )}
@@ -113,7 +115,7 @@ export default function ImportScreen() {
           onPress={handleMerge}
         >
           <Text style={styles.mergeButtonText}>
-            Fusionner {backups.length} sauvegardes
+            {t('import.merge', { count: backups.length })}
           </Text>
         </Pressable>
       )}

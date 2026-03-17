@@ -3,10 +3,13 @@ import { useEffect } from "react"
 import { useColorScheme } from "react-native"
 import * as Linking from "expo-linking"
 import { House, Settings } from "lucide-react-native"
+import { useTranslation } from "react-i18next"
+import "../src/lib/i18n"
 import { importFromUri } from "../src/lib/import"
 import { getColors } from "../src/theme"
 
 export default function RootLayout() {
+  const { t } = useTranslation()
   const colorScheme = useColorScheme()
   const isDark = colorScheme === "dark"
   const colors = getColors(isDark)
@@ -50,14 +53,14 @@ export default function RootLayout() {
       <Tabs.Screen
         name="(home)"
         options={{
-          title: "Accueil",
+          title: t("nav.home"),
           tabBarIcon: ({ color, size }) => <House color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
-          title: "Paramètres",
+          title: t("nav.settings"),
           headerShown: true,
           headerStyle: { backgroundColor: colors.primary },
           headerTintColor: "#ffffff",

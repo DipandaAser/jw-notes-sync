@@ -20,27 +20,32 @@ import {
   type DatabaseContents,
   type JWLibraryArchive,
 } from '@jw-notes-sync/core';
+import i18next from 'i18next';
 import { nativeAdapter } from '../adapter';
 import { useAppStore, type MergeResult } from '../stores/app';
 
-const MERGE_STEPS = [
-  'Locations',
-  'Surlignages',
-  'Notes',
-  'Signets',
-  'Playlists',
-  'Étiquettes',
-  'Formulaires',
-  'Exportation',
-];
+const MERGE_STEP_KEYS = [
+  'steps.locations',
+  'steps.highlights',
+  'steps.notes',
+  'steps.bookmarks',
+  'steps.playlists',
+  'steps.tags',
+  'steps.inputFields',
+  'steps.export',
+] as const;
+
+function t(key: string): string {
+  return i18next.t(key);
+}
 
 function updateProgress(stepIndex: number) {
-  const percent = Math.round(((stepIndex + 1) / MERGE_STEPS.length) * 100);
+  const percent = Math.round(((stepIndex + 1) / MERGE_STEP_KEYS.length) * 100);
   useAppStore.getState().setMergeProgress({
-    step: MERGE_STEPS[stepIndex]!,
+    step: t(MERGE_STEP_KEYS[stepIndex]!),
     percent,
-    steps: MERGE_STEPS.map((name, i) => ({
-      name,
+    steps: MERGE_STEP_KEYS.map((key, i) => ({
+      name: t(key),
       status: i < stepIndex ? 'done' : i === stepIndex ? 'current' : 'pending',
     })),
   });
@@ -150,9 +155,9 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
     finalStore.setArchiveBytes(archiveBytes);
     finalStore.setMergeStatus('done');
     finalStore.setMergeProgress({
-      step: 'Terminé',
+      step: t('steps.done'),
       percent: 100,
-      steps: MERGE_STEPS.map((name) => ({ name, status: 'done' })),
+      steps: MERGE_STEP_KEYS.map((key) => ({ name: t(key), status: 'done' })),
     });
     finalStore.goTo('export');
   } catch (err) {

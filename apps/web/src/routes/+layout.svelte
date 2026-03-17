@@ -3,8 +3,14 @@
 	import '../app.css';
 	import { appState } from '$lib/stores/app.svelte';
 	import { House, Settings, Sun, Moon } from 'lucide-svelte';
+	import { initI18n, t } from '$lib/i18n.svelte';
+	import { onMount } from 'svelte';
 
 	let { children } = $props();
+
+	onMount(() => {
+		initI18n();
+	});
 </script>
 
 <svelte:head>
@@ -34,7 +40,7 @@
 			class="grid h-9 w-9 place-items-center rounded-lg transition-all"
 			style="background: var(--surface-1); color: var(--text-secondary);"
 			onclick={() => appState.toggleTheme()}
-			aria-label="Basculer le thème"
+			aria-label={t('nav.toggleTheme')}
 		>
 			{#if appState.theme === 'light'}
 				<Sun size={18} />
@@ -60,7 +66,7 @@
 			onclick={() => appState.goToTab('home')}
 		>
 			<House size={20} />
-			Accueil
+			{t('nav.home')}
 		</button>
 		<button
 			class="flex flex-1 flex-col items-center gap-1 py-2.5 text-xs font-medium transition-colors"
@@ -68,7 +74,7 @@
 			onclick={() => appState.goToTab('settings')}
 		>
 			<Settings size={20} />
-			Paramètres
+			{t('nav.settings')}
 		</button>
 	</nav>
 </div>

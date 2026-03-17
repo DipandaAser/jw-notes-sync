@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, useColorScheme } from 'react-native';
 import { useRouter, useNavigation } from 'expo-router';
 import { Check, CircleDot, Circle } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../src/stores/app';
 import { runMerge } from '../../src/lib/merge';
 import { getColors } from '../../src/theme';
@@ -9,6 +10,7 @@ import { getColors } from '../../src/theme';
 export default function MergeScreen() {
   const router = useRouter();
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const colors = getColors(isDark);
@@ -40,7 +42,7 @@ export default function MergeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Text style={[styles.title, { color: colors.text }]}>Fusion en cours</Text>
+      <Text style={[styles.title, { color: colors.text }]}>{t('merge.title')}</Text>
 
       {mergeStatus === 'merging' && (
         <>
@@ -83,7 +85,7 @@ export default function MergeScreen() {
 
       {mergeStatus === 'error' && (
         <View style={styles.errorContainer}>
-          <Text style={[styles.errorTitle, { color: colors.error }]}>Erreur</Text>
+          <Text style={[styles.errorTitle, { color: colors.error }]}>{t('merge.error')}</Text>
           <Text style={[styles.errorMessage, { color: colors.textMuted }]}>{mergeError}</Text>
           <Pressable
             style={[styles.retryButton, { backgroundColor: colors.primary }]}
@@ -92,7 +94,7 @@ export default function MergeScreen() {
               router.replace('/(home)/');
             }}
           >
-            <Text style={styles.retryButtonText}>Retour</Text>
+            <Text style={styles.retryButtonText}>{t('merge.retry')}</Text>
           </Pressable>
         </View>
       )}

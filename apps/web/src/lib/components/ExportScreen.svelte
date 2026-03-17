@@ -2,11 +2,12 @@
 	import { appState } from '$lib/stores/app.svelte';
 	import { downloadArchive } from '$lib/merge';
 	import { Check, Smartphone, Download } from 'lucide-svelte';
+	import { t, getLocale } from '$lib/i18n.svelte';
 
 	const result = $derived(appState.mergeResult);
 
 	function formatNumber(n: number): string {
-		return n.toLocaleString('fr-FR');
+		return n.toLocaleString(getLocale());
 	}
 
 	function startOver() {
@@ -16,13 +17,13 @@
 
 {#if !result}
 	<div class="py-16 text-center">
-		<p style="color: var(--text-secondary);">Aucune fusion disponible.</p>
+		<p style="color: var(--text-secondary);">{t('export.noResultFull')}</p>
 		<button
 			class="mt-4 rounded-lg px-6 py-3 font-semibold transition-all"
 			style="background: var(--accent); color: var(--accent-text);"
 			onclick={() => appState.goTo('import')}
 		>
-			← Retour à l'import
+			{t('merge.back')}
 		</button>
 	</div>
 {:else}
@@ -34,21 +35,21 @@
 		>
 			<Check size={28} />
 		</div>
-		<h1 class="mb-2 text-3xl font-bold tracking-tight">Fusion terminée</h1>
+		<h1 class="mb-2 text-3xl font-bold tracking-tight">{t('export.successFull')}</h1>
 		<p class="text-base" style="color: var(--text-secondary);">
-			Vos {appState.backups.length} sauvegardes ont été fusionnées avec succès.
+			{t('export.subtitleFull', { count: appState.backups.length })}
 		</p>
 	</div>
 
 	<!-- Stats grid -->
 	<div class="mx-auto mb-10 grid max-w-2xl grid-cols-3 gap-4">
 		{#each [
-			{ value: result.stats.notes, label: 'Notes' },
-			{ value: result.stats.highlights, label: 'Surlignages' },
-			{ value: result.stats.bookmarks, label: 'Signets' },
-			{ value: result.stats.tags, label: 'Étiquettes' },
-			{ value: result.stats.locations, label: 'Locations' },
-			{ value: result.stats.inputFields, label: 'Formulaires' },
+			{ value: result.stats.notes, label: t('stats.notes') },
+			{ value: result.stats.highlights, label: t('stats.highlights') },
+			{ value: result.stats.bookmarks, label: t('stats.bookmarks') },
+			{ value: result.stats.tags, label: t('stats.tags') },
+			{ value: result.stats.locations, label: t('stats.locationsFull') },
+			{ value: result.stats.inputFields, label: t('stats.inputFields') },
 		] as stat}
 			<div class="rounded-lg border p-4 text-center" style="background: var(--surface-1); border-color: var(--border);">
 				<div class="text-2xl font-bold tabular-nums">{formatNumber(stat.value)}</div>
@@ -60,7 +61,7 @@
 	<!-- Source devices -->
 	<div class="mx-auto mb-10 max-w-2xl">
 		<h2 class="mb-3 text-sm font-semibold uppercase tracking-wider" style="color: var(--text-tertiary);">
-			Sources fusionnées
+			{t('export.sources')}
 		</h2>
 		<div class="flex flex-col gap-2">
 			{#each appState.backups as backup}
@@ -83,7 +84,7 @@
 			style="background: var(--accent); color: var(--accent-text);"
 			onclick={downloadArchive}
 		>
-			Télécharger le fichier fusionné
+			{t('export.download')}
 		</button>
 		<div class="mt-4">
 			<button
@@ -91,7 +92,7 @@
 				style="color: var(--text-tertiary);"
 				onclick={startOver}
 			>
-				Recommencer une nouvelle fusion
+				{t('export.newMergeFull')}
 			</button>
 		</div>
 	</div>

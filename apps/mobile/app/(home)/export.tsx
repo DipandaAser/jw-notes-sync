@@ -11,12 +11,14 @@ import { useRouter, useNavigation } from "expo-router"
 import { File, Paths } from "expo-file-system"
 import * as Sharing from "expo-sharing"
 import { Share2, RefreshCw } from "lucide-react-native"
+import { useTranslation } from "react-i18next"
 import { useAppStore } from "../../src/stores/app"
 import { getColors } from "../../src/theme"
 
 export default function ExportScreen() {
   const router = useRouter()
   const navigation = useNavigation()
+  const { t } = useTranslation()
   const colorScheme = useColorScheme()
   const isDark = colorScheme === "dark"
   const colors = getColors(isDark)
@@ -46,16 +48,16 @@ export default function ExportScreen() {
       const canShare = await Sharing.isAvailableAsync()
       if (canShare) {
         await Sharing.shareAsync(file.uri, {
-          dialogTitle: "Exporter la sauvegarde fusionnée",
+          dialogTitle: t("export.shareDialog"),
         })
       } else {
         Alert.alert(
-          "Erreur",
-          "Le partage n'est pas disponible sur cet appareil",
+          t("common.error"),
+          t("export.shareError"),
         )
       }
     } catch (err) {
-      Alert.alert("Erreur", err instanceof Error ? err.message : String(err))
+      Alert.alert(t("common.error"), err instanceof Error ? err.message : String(err))
     }
   }
 
@@ -68,13 +70,13 @@ export default function ExportScreen() {
     return (
       <View style={[styles.container, { backgroundColor: colors.bg }]}>
         <Text style={[styles.title, { color: colors.text }]}>
-          Aucun résultat
+          {t("export.noResult")}
         </Text>
         <Pressable
           style={[styles.button, { backgroundColor: colors.primary }]}
           onPress={() => router.replace("/(home)/")}
         >
-          <Text style={styles.buttonText}>Retour</Text>
+          <Text style={styles.buttonText}>{t("export.back")}</Text>
         </Pressable>
       </View>
     )
@@ -85,10 +87,10 @@ export default function ExportScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <Text style={[styles.title, { color: colors.text }]}>
-        Fusion terminée !
+        {t("export.success")}
       </Text>
       <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-        Votre sauvegarde fusionnée est prête
+        {t("export.subtitle")}
       </Text>
 
       <View
@@ -97,29 +99,29 @@ export default function ExportScreen() {
           { backgroundColor: colors.card, borderColor: colors.border },
         ]}
       >
-        <StatItem label="Notes" count={stats.notes} color={colors.accent1} />
+        <StatItem label={t("stats.notes")} count={stats.notes} color={colors.accent1} />
         <StatItem
-          label="Surlignages"
+          label={t("stats.highlights")}
           count={stats.highlights}
           color={colors.accent2}
         />
         <StatItem
-          label="Signets"
+          label={t("stats.bookmarks")}
           count={stats.bookmarks}
           color={colors.accent3}
         />
         <StatItem
-          label="Étiquettes"
+          label={t("stats.tags")}
           count={stats.tags}
           color={colors.accent4}
         />
         <StatItem
-          label="Emplacements"
+          label={t("stats.locations")}
           count={stats.locations}
           color={colors.accent5}
         />
         <StatItem
-          label="Formulaires"
+          label={t("stats.inputFields")}
           count={stats.inputFields}
           color={colors.accent6}
         />
@@ -133,7 +135,7 @@ export default function ExportScreen() {
           <View style={styles.exportButtonContent}>
             <Share2 color="#ffffff" size={18} />
             <Text style={styles.exportButtonText}>
-              Partager le fichier .jwlibrary
+              {t("export.share")}
             </Text>
           </View>
         </Pressable>
@@ -152,7 +154,7 @@ export default function ExportScreen() {
           <View style={styles.exportButtonContent}>
             <RefreshCw color={colors.text} size={16} />
             <Text style={[styles.buttonText, { color: colors.text }]}>
-              Nouvelle fusion
+              {t("export.newMerge")}
             </Text>
           </View>
         </Pressable>
