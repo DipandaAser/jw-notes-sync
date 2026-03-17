@@ -77,7 +77,7 @@ pnpm --filter @jw-notes-sync/web build
 
 ## Internationalization (i18n)
 
-The app supports **French** (default) and **English**, with a shared translation system across both platforms.
+The app supports **English** (default) and **French**, with a shared translation system across both platforms.
 
 ### Architecture
 

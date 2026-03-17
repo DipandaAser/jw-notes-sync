@@ -59,7 +59,7 @@ i18next.on("languageChanged", (lng: string) => {
 
 export function t(key: string, options?: Record<string, unknown>): string {
 	void _tick;
-	return i18next.t(key, options as never);
+	return String(i18next.t(key, options as never));
 }
 
 export function getLocale(): SupportedLocale {

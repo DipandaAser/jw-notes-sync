@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Mail, Github, Globe } from 'lucide-svelte';
-	import { t, getLocale, setLocale, supportedLocales, type SupportedLocale } from '$lib/i18n.svelte';
+	import { t, getLocale, setLocale, type SupportedLocale } from '$lib/i18n.svelte';
 
 	function toggleLanguage() {
 		const current = getLocale();
