@@ -65,7 +65,8 @@
 					},
 				};
 
-				appState.addBackup(backup, bytes);
+				// Only persist to storage in library mode
+				appState.addBackup(backup, appState.mergeMode === 'library' ? bytes : undefined);
 
 				// In library mode with a source of truth, auto-merge the first new file
 				if (appState.mergeMode === 'library' && appState.sourceOfTruth) {
@@ -146,7 +147,7 @@
 					},
 				};
 
-				appState.addBackup(backup, bytes);
+				appState.addBackup(backup, appState.mergeMode === 'library' ? bytes : undefined);
 			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : t('import.error.generic');
