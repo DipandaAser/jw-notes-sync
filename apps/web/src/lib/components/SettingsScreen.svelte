@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { Mail, Github, Globe } from 'lucide-svelte';
+	import { Mail, Github, Globe, History, Trash2, Smartphone } from 'lucide-svelte';
 	import { t, getLocale, setLocale, type SupportedLocale } from '$lib/i18n.svelte';
+	import { appState } from '$lib/stores/app.svelte';
 
 	function toggleLanguage() {
 		const current = getLocale();
@@ -12,6 +13,20 @@
 		fr: 'Français',
 		en: 'English',
 	};
+
+	function formatDate(iso: string): string {
+		try {
+			return new Date(iso).toLocaleDateString(getLocale(), {
+				day: 'numeric',
+				month: 'short',
+				year: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+			});
+		} catch {
+			return iso;
+		}
+	}
 </script>
 
 <h1 class="mb-6 text-2xl font-bold">{t('settings.title')}</h1>
@@ -55,3 +70,54 @@
 		</div>
 	</a>
 </div>
+
+<!-- Merge history -->
+{#if appState.mergeHistory.length > 0}
+	<div class="mt-10 max-w-lg">
+		<div class="mb-3 flex items-center justify-between">
+			<h2 class="flex items-center gap-2 text-lg font-bold">
+				<History size={20} style="color: var(--accent);" />
+				{t('history.title')}
+			</h2>
+			<button
+				class="flex items-center gap-1 text-xs font-medium transition-all"
+				style="color: var(--danger);"
+				onclick={() => appState.clearMergeHistory()}
+			>
+				<Trash2 size={14} />
+				{t('history.clear')}
+			</button>
+		</div>
+		<div class="flex flex-col gap-2">
+			{#each appState.mergeHistory as entry}
+				<div
+					class="rounded-lg border px-4 py-3"
+					style="background: var(--surface-1); border-color: var(--border);"
+				>
+					<div class="mb-1 flex items-center justify-between">
+						<span class="text-sm font-medium">{formatDate(entry.date)}</span>
+						{#if entry.dryRun}
+							<span
+								class="rounded px-1.5 py-0.5 text-xs font-semibold"
+								style="background: var(--accent-subtle, var(--surface-2)); color: var(--accent);"
+							>
+								{t('config.dryRun.badge')}
+							</span>
+						{/if}
+					</div>
+					<div class="flex flex-wrap gap-1 text-xs" style="color: var(--text-tertiary);">
+						{#each entry.sources as source}
+							<span class="flex items-center gap-1">
+								<Smartphone size={12} />
+								{source.deviceName}
+							</span>
+						{/each}
+					</div>
+					<div class="mt-1 text-xs" style="color: var(--text-secondary);">
+						{entry.stats.notes} notes · {entry.stats.highlights} highlights · {entry.stats.bookmarks} bookmarks
+					</div>
+				</div>
+			{/each}
+		</div>
+	</div>
+{/if}
