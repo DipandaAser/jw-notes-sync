@@ -4,6 +4,7 @@
 	import { appState } from '$lib/stores/app.svelte';
 	import { formatBytes } from '$lib/format';
 	import HelpScreen from './HelpScreen.svelte';
+	import SyncSection from './SyncSection.svelte';
 
 	function toggleLanguage() {
 		const current = getLocale();
@@ -86,6 +87,11 @@
 		<RotateCcw size={22} style="color: var(--accent);" />
 		<div class="font-semibold" style="color: var(--text-primary);">{t('settings.replayTutorial')}</div>
 	</button>
+</div>
+
+<!-- Cloud sync -->
+<div class="mt-10 max-w-lg">
+	<SyncSection />
 </div>
 
 <!-- FAQ -->

@@ -5,7 +5,7 @@
 	import { t, getLocale } from '$lib/i18n.svelte';
 	import { formatBytes } from '$lib/format';
 	import { loadBackupBytes } from '$lib/storage';
-	import { Plus, Merge, Download, Eye, Smartphone, Loader } from 'lucide-svelte';
+	import { Plus, Merge, Download, Eye, Smartphone, Loader, Cloud, CloudOff } from 'lucide-svelte';
 
 	let loadingTruth = $state(false);
 	let addingFile = $state(false);
@@ -110,9 +110,20 @@
 				</span>
 			{/each}
 		</div>
-		<p class="mb-4 text-xs" style="color: var(--text-tertiary);">
+		<p class="mb-3 text-xs" style="color: var(--text-tertiary);">
 			{t('library.sourceOfTruth.desc')}
 		</p>
+		{#if appState.syncStatus === 'connected' && appState.syncMeta?.lastSyncedAt}
+			<div class="mb-3 flex items-center gap-1.5 text-xs font-medium" style="color: var(--success);">
+				<Cloud size={12} />
+				{t('sync.synced')}
+			</div>
+		{:else if appState.syncStatus === 'connected'}
+			<div class="mb-3 flex items-center gap-1.5 text-xs font-medium" style="color: var(--text-tertiary);">
+				<CloudOff size={12} />
+				{t('sync.notSynced')}
+			</div>
+		{/if}
 		<div class="flex gap-2">
 			<button
 				class="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all"

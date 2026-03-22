@@ -15,6 +15,18 @@ import {
 } from '$lib/storage';
 import { parseJWLibrary } from '@jw-notes-sync/core';
 import { webAdapter } from '$lib/adapter';
+import {
+  signIn,
+  signOut,
+  trySilentAuth,
+  loadSyncMeta,
+  clearSyncMeta,
+  uploadSourceOfTruth,
+  checkRemoteStatus,
+  downloadFromDrive,
+  type SyncStatus,
+  type SyncMeta,
+} from '$lib/gdrive';
 
 export interface ImportedBackup {
   id: string;
@@ -103,6 +115,9 @@ class AppState {
   pendingBackupIds = $state<string[]>([]);
   mergeConfig = $state<MergeConfig>({ ...DEFAULT_MERGE_CONFIG });
   dryRun = $state<boolean>(false);
+  syncStatus = $state<SyncStatus>('disconnected');
+  syncError = $state<string | null>(null);
+  syncMeta = $state<SyncMeta | null>(null);
   mergeHistory = $state<MergeHistoryEntry[]>(loadHistory());
   showOnboarding = $state<boolean>(
     typeof window !== 'undefined' ? !localStorage.getItem(ONBOARDING_KEY) : false,
@@ -202,6 +217,108 @@ class AppState {
 
   saveMergeConfig() {
     persistMergeConfig({ ...this.mergeConfig });
+  }
+
+  // ── Cloud sync ──────────────────────────────────────────
+
+  async initSync() {
+    this.syncMeta = await loadSyncMeta();
+    if (this.syncMeta?.lastSyncedAt) {
+      // User previously connected — show as connected (lazy re-auth on actual API calls)
+      this.syncStatus = 'connected';
+
+      // Try silent re-auth in background (may fail if GIS not loaded yet or popup blocked)
+      this.waitForGisAndAuth();
+    }
+  }
+
+  private async waitForGisAndAuth() {
+    // Wait for GIS script to load (up to 5 seconds)
+    for (let i = 0; i < 50; i++) {
+      if (typeof google !== 'undefined' && google?.accounts?.oauth2) break;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    try {
+      const ok = await trySilentAuth();
+      if (!ok) {
+        // Silent auth failed — still show as connected but will re-auth on next API call
+      }
+    } catch {
+      // GIS not loaded or auth failed — will prompt on next sync attempt
+    }
+  }
+
+  async connectGoogleDrive() {
+    this.syncStatus = 'connecting';
+    this.syncError = null;
+    try {
+      await signIn();
+      this.syncStatus = 'connected';
+      this.syncMeta = await loadSyncMeta();
+    } catch (err) {
+      this.syncStatus = 'error';
+      this.syncError = err instanceof Error ? err.message : String(err);
+    }
+  }
+
+  async disconnectGoogleDrive() {
+    await signOut();
+    await clearSyncMeta();
+    this.syncStatus = 'disconnected';
+    this.syncMeta = null;
+    this.syncError = null;
+  }
+
+  async syncToCloud() {
+    if (this.syncStatus !== 'connected' || !this.sourceOfTruth) return;
+    this.syncStatus = 'syncing';
+    this.syncError = null;
+    try {
+      // Ensure we have a valid token (may prompt user if expired)
+      const { getAccessToken, signIn: gSignIn } = await import('$lib/gdrive');
+      if (!getAccessToken()) await gSignIn();
+
+      const bytes = await loadBackupBytes(this.sourceOfTruth.id);
+      if (!bytes) throw new Error('Source of truth not found in storage');
+      await uploadSourceOfTruth(this.sourceOfTruth, bytes);
+      this.syncMeta = await loadSyncMeta();
+      this.syncStatus = 'connected';
+    } catch (err) {
+      this.syncStatus = 'error';
+      this.syncError = err instanceof Error ? err.message : String(err);
+    }
+  }
+
+  async syncFromCloud() {
+    if (this.syncStatus !== 'connected') return;
+    this.syncStatus = 'syncing';
+    this.syncError = null;
+    try {
+      // Ensure we have a valid token
+      const { getAccessToken, signIn: gSignIn } = await import('$lib/gdrive');
+      if (!getAccessToken()) await gSignIn();
+
+      const result = await downloadFromDrive();
+      if (!result) throw new Error('No backup found on Google Drive');
+      // Save as new source of truth
+      await saveMergedBackup(result.meta.id, result.bytes, result.meta);
+      await this.refreshSourceOfTruth();
+      await this.refreshStorage();
+      this.syncMeta = await loadSyncMeta();
+      this.syncStatus = 'connected';
+    } catch (err) {
+      this.syncStatus = 'error';
+      this.syncError = err instanceof Error ? err.message : String(err);
+    }
+  }
+
+  async checkCloudStatus() {
+    if (this.syncStatus !== 'connected') return null;
+    try {
+      return await checkRemoteStatus(this.sourceOfTruth);
+    } catch {
+      return null;
+    }
   }
 
   goToTab(tab: Tab) {

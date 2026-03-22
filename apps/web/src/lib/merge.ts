@@ -209,6 +209,11 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
       // Merge succeeded — pending backups are now committed
       appState.pendingBackupIds = [];
 
+      // Auto-sync to cloud if connected
+      if (appState.syncStatus === 'connected' && appState.mergeMode === 'library') {
+        appState.syncToCloud().catch(() => {});
+      }
+
       appState.goTo('export');
     }
   } catch (err) {

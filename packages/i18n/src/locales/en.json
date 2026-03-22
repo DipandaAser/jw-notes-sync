@@ -194,6 +194,25 @@
   "storage.clear": "Clear all stored backups",
   "storage.empty": "No stored backups",
 
+  "sync.title": "Cloud sync",
+  "sync.description": "Sync your source of truth across devices using Google Drive.",
+  "sync.connect": "Connect Google Drive",
+  "sync.disconnect": "Disconnect",
+  "sync.connected": "Connected to Google Drive",
+  "sync.lastSync": "Last synced: {{date}}",
+  "sync.neverSynced": "Never synced",
+  "sync.syncNow": "Sync now",
+  "sync.uploading": "Uploading…",
+  "sync.downloading": "Downloading…",
+  "sync.error": "Sync error",
+  "sync.retry": "Retry",
+  "sync.conflict.title": "Sync conflict",
+  "sync.conflict.desc": "Both your local backup and the remote copy have changed since the last sync.",
+  "sync.conflict.keepLocal": "Keep local",
+  "sync.conflict.keepRemote": "Keep remote",
+  "sync.synced": "Synced",
+  "sync.notSynced": "Not synced",
+
   "common.cancel": "Cancel",
   "common.error": "Error"
 }
