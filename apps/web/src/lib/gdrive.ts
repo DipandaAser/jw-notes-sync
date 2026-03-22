@@ -221,7 +221,8 @@ export async function loadSyncMeta(): Promise<SyncMeta | null> {
 }
 
 export async function saveSyncMeta(meta: SyncMeta): Promise<void> {
-	await saveConfig(SYNC_META_KEY, meta);
+	// Ensure plain object for IndexedDB structured clone
+	await saveConfig(SYNC_META_KEY, JSON.parse(JSON.stringify(meta)));
 }
 
 export async function clearSyncMeta(): Promise<void> {
