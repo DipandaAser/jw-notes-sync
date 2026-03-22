@@ -99,6 +99,8 @@ class AppState {
   mergeError = $state<string | null>(null);
   theme = $state<'light' | 'dark'>('light');
   archiveBytes = $state<Uint8Array | null>(null);
+  /** IDs of backups added during the current library merge flow (cleaned up on cancel). */
+  pendingBackupIds = $state<string[]>([]);
   mergeConfig = $state<MergeConfig>({ ...DEFAULT_MERGE_CONFIG });
   dryRun = $state<boolean>(false);
   mergeHistory = $state<MergeHistoryEntry[]>(loadHistory());
@@ -134,6 +136,7 @@ class AppState {
   addBackup(backup: ImportedBackup, rawBytes?: Uint8Array) {
     this.backups = [...this.backups, backup];
     if (rawBytes) {
+      this.pendingBackupIds = [...this.pendingBackupIds, backup.id];
       saveBackup(backup.id, rawBytes, {
         id: backup.id,
         fileName: backup.fileName,
@@ -262,6 +265,14 @@ class AppState {
   }
 
   reset() {
+    // Clean up any pending backups that were saved during a cancelled merge
+    if (this.pendingBackupIds.length > 0) {
+      for (const id of this.pendingBackupIds) {
+        deleteBackup(id).catch(() => {});
+      }
+      this.refreshStorage();
+    }
+    this.pendingBackupIds = [];
     this.tab = 'home';
     this.screen = 'library';
     this.backups = [];

@@ -163,6 +163,7 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
         dryRun: true,
       });
 
+      appState.pendingBackupIds = [];
       appState.openExplorer(contents, t('config.dryRun.badge'));
     } else {
       // Full merge: build archive
@@ -204,6 +205,9 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
         config: { ...mergeConfig },
         dryRun: false,
       });
+
+      // Merge succeeded — pending backups are now committed
+      appState.pendingBackupIds = [];
 
       appState.goTo('export');
     }
