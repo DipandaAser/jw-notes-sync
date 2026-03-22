@@ -12,9 +12,9 @@
 	<SettingsScreen />
 {:else if appState.screen === 'explore'}
 	<DataExplorer />
-{:else if appState.screen === 'library'}
+{:else if appState.screen === 'library' && appState.sourceOfTruth}
 	<LibraryScreen />
-{:else if appState.screen === 'import'}
+{:else if appState.screen === 'library' || appState.screen === 'import'}
 	<ImportScreen />
 {:else if appState.screen === 'merge'}
 	<MergeScreen />

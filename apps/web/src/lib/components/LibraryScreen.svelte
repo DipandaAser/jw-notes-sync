@@ -1,11 +1,46 @@
 <script lang="ts">
-	import { appState } from '$lib/stores/app.svelte';
+	import { parseJWLibrary } from '@jw-notes-sync/core';
+	import { webAdapter } from '$lib/adapter';
+	import { appState, type ImportedBackup } from '$lib/stores/app.svelte';
 	import { t, getLocale } from '$lib/i18n.svelte';
 	import { formatBytes } from '$lib/format';
-	import { loadBackupBytes } from '$lib/storage';
+	import { loadBackupBytes, saveBackup } from '$lib/storage';
 	import { Star, Plus, Merge, Download, Eye, X, Smartphone, Loader } from 'lucide-svelte';
 
 	let loadingTruth = $state(false);
+	let addingFile = $state(false);
+	let fileInput: HTMLInputElement;
+
+	async function onFileSelected(e: Event) {
+		const input = e.target as HTMLInputElement;
+		const file = input.files?.[0];
+		input.value = '';
+		if (!file || !file.name.endsWith('.jwlibrary')) return;
+
+		addingFile = true;
+		try {
+			const bytes = new Uint8Array(await file.arrayBuffer());
+			const archive = await parseJWLibrary(webAdapter, bytes);
+			const db = archive.database;
+			const backup: ImportedBackup = {
+				id: crypto.randomUUID(),
+				fileName: file.name,
+				deviceName: archive.manifest.userDataBackup.deviceName,
+				date: archive.manifest.creationDate,
+				archive,
+				stats: {
+					notes: db.notes.length,
+					highlights: db.userMarks.length,
+					bookmarks: db.bookmarks.length,
+					tags: db.tags.length,
+				},
+			};
+			appState.addBackup(backup, bytes);
+			await appState.startLibraryMerge(backup);
+		} finally {
+			addingFile = false;
+		}
+	}
 
 	function formatDate(iso: string): string {
 		try {
@@ -25,14 +60,6 @@
 	const mergedFiles = $derived(
 		appState.recentFiles.filter((m) => m.isMerged && !m.isSourceOfTruth),
 	);
-	const hasLibrary = $derived(appState.recentFiles.length > 0);
-
-	function goToImport() {
-		appState.mergeMode = 'library';
-		appState.backups = [];
-		appState.goTo('import');
-	}
-
 	async function downloadTruth() {
 		if (!appState.sourceOfTruth || loadingTruth) return;
 		loadingTruth = true;
@@ -52,29 +79,16 @@
 	}
 </script>
 
-{#if !hasLibrary}
-	<!-- Empty state -->
-	<div class="py-16 text-center">
-		<div
-			class="mx-auto mb-6 grid h-20 w-20 place-items-center rounded-full"
-			style="background: var(--surface-2);"
-		>
-			<Smartphone size={36} style="color: var(--text-tertiary);" />
-		</div>
-		<h2 class="mb-2 text-2xl font-bold">{t('library.empty.title')}</h2>
-		<p class="mb-8 text-base" style="color: var(--text-secondary);">
-			{t('library.empty.desc')}
-		</p>
-		<button
-			class="rounded-xl px-8 py-4 text-base font-semibold tracking-tight transition-all hover:-translate-y-0.5"
-			style="background: var(--accent); color: var(--accent-text);"
-			onclick={goToImport}
-		>
-			{t('library.empty.import')}
-		</button>
-	</div>
-{:else}
-	<h1 class="mb-6 text-2xl font-bold">{t('library.title')}</h1>
+<!-- Hidden file input for adding backups -->
+<input
+	type="file"
+	accept=".jwlibrary"
+	class="hidden"
+	bind:this={fileInput}
+	onchange={onFileSelected}
+/>
+
+<h1 class="mb-6 text-2xl font-bold">{t('library.title')}</h1>
 
 	<!-- Source of truth -->
 	{#if appState.sourceOfTruth}
@@ -146,9 +160,14 @@
 		<button
 			class="flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold transition-all hover:-translate-y-0.5"
 			style="background: var(--accent); color: var(--accent-text);"
-			onclick={goToImport}
+			onclick={() => fileInput.click()}
+			disabled={addingFile}
 		>
-			<Plus size={18} />
+			{#if addingFile}
+				<Loader size={18} class="animate-spin" />
+			{:else}
+				<Plus size={18} />
+			{/if}
 			{t('library.addBackup')}
 		</button>
 		{#if originals.length >= 2}
@@ -222,4 +241,3 @@
 			{/each}
 		</div>
 	{/if}
-{/if}
