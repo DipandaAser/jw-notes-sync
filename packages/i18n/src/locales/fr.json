@@ -194,6 +194,25 @@
   "storage.clear": "Supprimer toutes les sauvegardes stockées",
   "storage.empty": "Aucune sauvegarde stockée",
 
+  "sync.title": "Synchronisation cloud",
+  "sync.description": "Synchronisez votre source de vérité entre vos appareils via Google Drive.",
+  "sync.connect": "Connecter Google Drive",
+  "sync.disconnect": "Déconnecter",
+  "sync.connected": "Connecté à Google Drive",
+  "sync.lastSync": "Dernière synchro : {{date}}",
+  "sync.neverSynced": "Jamais synchronisé",
+  "sync.syncNow": "Synchroniser",
+  "sync.uploading": "Envoi en cours…",
+  "sync.downloading": "Téléchargement…",
+  "sync.error": "Erreur de synchronisation",
+  "sync.retry": "Réessayer",
+  "sync.conflict.title": "Conflit de synchronisation",
+  "sync.conflict.desc": "Votre sauvegarde locale et la copie distante ont toutes deux changé depuis la dernière synchronisation.",
+  "sync.conflict.keepLocal": "Garder la version locale",
+  "sync.conflict.keepRemote": "Garder la version distante",
+  "sync.synced": "Synchronisé",
+  "sync.notSynced": "Non synchronisé",
+
   "common.cancel": "Annuler",
   "common.error": "Erreur"
 }

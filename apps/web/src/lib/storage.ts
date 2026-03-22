@@ -290,6 +290,23 @@ export async function loadMergeConfig(): Promise<unknown | null> {
 	return config ?? null;
 }
 
+/** Generic config get/set for any key in the config store. */
+export async function saveConfig(key: string, value: unknown): Promise<void> {
+	const db = await openDB();
+	await idbPut(db, CONFIG_STORE, value, key);
+}
+
+export async function loadConfig<T>(key: string): Promise<T | null> {
+	const db = await openDB();
+	const val = await idbGet<T>(db, CONFIG_STORE, key);
+	return val ?? null;
+}
+
+export async function deleteConfig(key: string): Promise<void> {
+	const db = await openDB();
+	await idbDelete(db, CONFIG_STORE, key);
+}
+
 /** Estimate total storage used by backups (bytes). */
 export async function getStorageUsage(): Promise<{ used: number; quota: number }> {
 	try {

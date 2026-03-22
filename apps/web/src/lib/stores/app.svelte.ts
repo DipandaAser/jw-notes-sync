@@ -15,6 +15,18 @@ import {
 } from '$lib/storage';
 import { parseJWLibrary } from '@jw-notes-sync/core';
 import { webAdapter } from '$lib/adapter';
+import {
+  signIn,
+  signOut,
+  trySilentAuth,
+  loadSyncMeta,
+  clearSyncMeta,
+  uploadSourceOfTruth,
+  checkRemoteStatus,
+  downloadFromDrive,
+  type SyncStatus,
+  type SyncMeta,
+} from '$lib/gdrive';
 
 export interface ImportedBackup {
   id: string;
@@ -103,6 +115,9 @@ class AppState {
   pendingBackupIds = $state<string[]>([]);
   mergeConfig = $state<MergeConfig>({ ...DEFAULT_MERGE_CONFIG });
   dryRun = $state<boolean>(false);
+  syncStatus = $state<SyncStatus>('disconnected');
+  syncError = $state<string | null>(null);
+  syncMeta = $state<SyncMeta | null>(null);
   mergeHistory = $state<MergeHistoryEntry[]>(loadHistory());
   showOnboarding = $state<boolean>(
     typeof window !== 'undefined' ? !localStorage.getItem(ONBOARDING_KEY) : false,
@@ -202,6 +217,84 @@ class AppState {
 
   saveMergeConfig() {
     persistMergeConfig({ ...this.mergeConfig });
+  }
+
+  // ── Cloud sync ──────────────────────────────────────────
+
+  async initSync() {
+    this.syncMeta = await loadSyncMeta();
+    if (this.syncMeta?.lastSyncedAt) {
+      // Try silent re-auth
+      const ok = await trySilentAuth();
+      if (ok) {
+        this.syncStatus = 'connected';
+      }
+    }
+  }
+
+  async connectGoogleDrive() {
+    this.syncStatus = 'connecting';
+    this.syncError = null;
+    try {
+      await signIn();
+      this.syncStatus = 'connected';
+      this.syncMeta = await loadSyncMeta();
+    } catch (err) {
+      this.syncStatus = 'error';
+      this.syncError = err instanceof Error ? err.message : String(err);
+    }
+  }
+
+  async disconnectGoogleDrive() {
+    await signOut();
+    await clearSyncMeta();
+    this.syncStatus = 'disconnected';
+    this.syncMeta = null;
+    this.syncError = null;
+  }
+
+  async syncToCloud() {
+    if (this.syncStatus !== 'connected' || !this.sourceOfTruth) return;
+    this.syncStatus = 'syncing';
+    this.syncError = null;
+    try {
+      const bytes = await loadBackupBytes(this.sourceOfTruth.id);
+      if (!bytes) throw new Error('Source of truth not found in storage');
+      await uploadSourceOfTruth(this.sourceOfTruth, bytes);
+      this.syncMeta = await loadSyncMeta();
+      this.syncStatus = 'connected';
+    } catch (err) {
+      this.syncStatus = 'error';
+      this.syncError = err instanceof Error ? err.message : String(err);
+    }
+  }
+
+  async syncFromCloud() {
+    if (this.syncStatus !== 'connected') return;
+    this.syncStatus = 'syncing';
+    this.syncError = null;
+    try {
+      const result = await downloadFromDrive();
+      if (!result) throw new Error('No backup found on Google Drive');
+      // Save as new source of truth
+      await saveMergedBackup(result.meta.id, result.bytes, result.meta);
+      await this.refreshSourceOfTruth();
+      await this.refreshStorage();
+      this.syncMeta = await loadSyncMeta();
+      this.syncStatus = 'connected';
+    } catch (err) {
+      this.syncStatus = 'error';
+      this.syncError = err instanceof Error ? err.message : String(err);
+    }
+  }
+
+  async checkCloudStatus() {
+    if (this.syncStatus !== 'connected') return null;
+    try {
+      return await checkRemoteStatus(this.sourceOfTruth);
+    } catch {
+      return null;
+    }
   }
 
   goToTab(tab: Tab) {
