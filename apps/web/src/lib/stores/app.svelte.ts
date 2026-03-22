@@ -1,5 +1,18 @@
 import type { JWLibraryArchive, DatabaseContents, MergeConfig } from '@jw-notes-sync/core';
 import { DEFAULT_MERGE_CONFIG } from '@jw-notes-sync/core';
+import {
+  saveBackup,
+  deleteBackup,
+  saveMergeConfig,
+  loadMergeConfig,
+  listBackupMetas,
+  loadBackupBytes,
+  clearAllBackups,
+  getStorageUsage,
+  type BackupMeta,
+} from '$lib/storage';
+import { parseJWLibrary } from '@jw-notes-sync/core';
+import { webAdapter } from '$lib/adapter';
 
 export interface ImportedBackup {
   id: string;
@@ -87,6 +100,9 @@ class AppState {
     typeof window !== 'undefined' ? !localStorage.getItem(ONBOARDING_KEY) : false,
   );
   onboardingStep = $state<number>(0);
+  recentFiles = $state<BackupMeta[]>([]);
+  storageUsed = $state<number>(0);
+  storageQuota = $state<number>(0);
   explorerData = $state<DatabaseContents | null>(null);
   explorerLabel = $state<string>('');
   previousScreen = $state<Screen>('import');
@@ -109,12 +125,72 @@ class AppState {
     localStorage.setItem('jw-notes-sync-theme', this.theme);
   }
 
-  addBackup(backup: ImportedBackup) {
+  addBackup(backup: ImportedBackup, rawBytes?: Uint8Array) {
     this.backups = [...this.backups, backup];
+    if (rawBytes) {
+      saveBackup(backup.id, rawBytes, {
+        id: backup.id,
+        fileName: backup.fileName,
+        deviceName: backup.deviceName,
+        date: backup.date,
+        stats: backup.stats,
+      }).then(() => this.refreshStorage());
+    }
   }
 
   removeBackup(id: string) {
     this.backups = this.backups.filter((b) => b.id !== id);
+    deleteBackup(id).then(() => this.refreshStorage());
+  }
+
+  async refreshStorage() {
+    this.recentFiles = await listBackupMetas();
+    const usage = await getStorageUsage();
+    this.storageUsed = usage.used;
+    this.storageQuota = usage.quota;
+  }
+
+  async restoreBackup(meta: BackupMeta): Promise<boolean> {
+    const bytes = await loadBackupBytes(meta.id);
+    if (!bytes) return false;
+    try {
+      const archive = await parseJWLibrary(webAdapter, bytes);
+      const db = archive.database;
+      const backup: ImportedBackup = {
+        id: meta.id,
+        fileName: meta.fileName,
+        deviceName: meta.deviceName,
+        date: meta.date,
+        archive,
+        stats: {
+          notes: db.notes.length,
+          highlights: db.userMarks.length,
+          bookmarks: db.bookmarks.length,
+          tags: db.tags.length,
+        },
+      };
+      this.backups = [...this.backups, backup];
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async clearStorage() {
+    await clearAllBackups();
+    await this.refreshStorage();
+  }
+
+  async initStorage() {
+    await this.refreshStorage();
+    const savedConfig = await loadMergeConfig();
+    if (savedConfig) {
+      this.mergeConfig = savedConfig as MergeConfig;
+    }
+  }
+
+  saveMergeConfig() {
+    saveMergeConfig({ ...this.mergeConfig });
   }
 
   goToTab(tab: Tab) {

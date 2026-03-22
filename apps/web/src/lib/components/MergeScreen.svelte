@@ -16,6 +16,7 @@
 
 	function applyPreset(preset: MergePreset) {
 		appState.mergeConfig = presetToConfig(preset);
+		appState.saveMergeConfig();
 	}
 
 	const presetLabels: Record<MergePreset, { label: string; desc: string }> = {
@@ -170,7 +171,7 @@
 							class="rounded-lg border px-2 py-1 text-xs"
 							style="background: var(--surface-2); border-color: var(--border); color: var(--text-primary);"
 							value={appState.mergeConfig.notes}
-							onchange={(e) => (appState.mergeConfig = { ...appState.mergeConfig, notes: (e.target as HTMLSelectElement).value as typeof appState.mergeConfig.notes })}
+							onchange={(e) => { appState.mergeConfig = { ...appState.mergeConfig, notes: (e.target as HTMLSelectElement).value as typeof appState.mergeConfig.notes }; appState.saveMergeConfig(); }}
 						>
 							<option value="concatenate">{t('config.notes.concatenate')}</option>
 							<option value="keepNewest">{t('config.notes.keepNewest')}</option>
@@ -186,7 +187,7 @@
 							class="rounded-lg border px-2 py-1 text-xs"
 							style="background: var(--surface-2); border-color: var(--border); color: var(--text-primary);"
 							value={appState.mergeConfig.highlights}
-							onchange={(e) => (appState.mergeConfig = { ...appState.mergeConfig, highlights: (e.target as HTMLSelectElement).value as typeof appState.mergeConfig.highlights })}
+							onchange={(e) => { appState.mergeConfig = { ...appState.mergeConfig, highlights: (e.target as HTMLSelectElement).value as typeof appState.mergeConfig.highlights }; appState.saveMergeConfig(); }}
 						>
 							<option value="keepNewest">{t('config.highlights.keepNewest')}</option>
 							<option value="keepA">{t('config.highlights.keepA')}</option>
@@ -201,7 +202,7 @@
 							class="rounded-lg border px-2 py-1 text-xs"
 							style="background: var(--surface-2); border-color: var(--border); color: var(--text-primary);"
 							value={appState.mergeConfig.inputFields}
-							onchange={(e) => (appState.mergeConfig = { ...appState.mergeConfig, inputFields: (e.target as HTMLSelectElement).value as typeof appState.mergeConfig.inputFields })}
+							onchange={(e) => { appState.mergeConfig = { ...appState.mergeConfig, inputFields: (e.target as HTMLSelectElement).value as typeof appState.mergeConfig.inputFields }; appState.saveMergeConfig(); }}
 						>
 							<option value="smartMerge">{t('config.inputFields.smartMerge')}</option>
 							<option value="keepA">{t('config.inputFields.keepA')}</option>
