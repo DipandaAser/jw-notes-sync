@@ -2,7 +2,7 @@
 	import { parseJWLibrary } from '@jw-notes-sync/core';
 	import { webAdapter } from '$lib/adapter';
 	import { appState, type ImportedBackup } from '$lib/stores/app.svelte';
-	import { Upload, X, Loader } from 'lucide-svelte';
+	import { Upload, X, Loader, Eye } from 'lucide-svelte';
 	import { t, getLocale } from '$lib/i18n.svelte';
 
 	let dragging = $state(false);
@@ -152,20 +152,28 @@
 	<div class="mb-8 flex flex-col gap-3">
 		{#each appState.backups as backup (backup.id)}
 			<div
-				class="relative rounded-xl border p-4 transition-all"
+				class="rounded-xl border p-4 transition-all"
 				style="background: var(--surface-1); border-color: var(--border);"
 			>
-				<button
-					class="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full transition-all hover:opacity-70"
-					style="background: var(--surface-2); color: var(--text-tertiary);"
-					onclick={() => appState.removeBackup(backup.id)}
-					aria-label={t('import.backups.remove')}
-				>
-					<X size={14} />
-				</button>
-				<div class="mb-1 flex items-center justify-between pr-8">
-					<h3 class="font-semibold">{backup.deviceName}</h3>
+				<div class="mb-1 flex items-center gap-2">
+					<h3 class="flex-1 font-semibold">{backup.deviceName}</h3>
 					<span class="text-xs" style="color: var(--text-tertiary);">{formatDate(backup.date)}</span>
+					<button
+						class="grid h-7 w-7 shrink-0 place-items-center rounded-full transition-all hover:opacity-70"
+						style="background: var(--accent); color: var(--accent-text);"
+						onclick={() => appState.openExplorer(backup.archive.database, backup.deviceName)}
+						aria-label={t('explorer.explore')}
+					>
+						<Eye size={14} />
+					</button>
+					<button
+						class="grid h-7 w-7 shrink-0 place-items-center rounded-full transition-all hover:opacity-70"
+						style="background: var(--surface-2); color: var(--text-tertiary);"
+						onclick={() => appState.removeBackup(backup.id)}
+						aria-label={t('import.backups.remove')}
+					>
+						<X size={14} />
+					</button>
 				</div>
 				<div class="mb-3 text-xs" style="color: var(--text-tertiary);">{backup.fileName}</div>
 				<div class="flex flex-wrap gap-2">

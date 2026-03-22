@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { appState } from '$lib/stores/app.svelte';
 	import { downloadArchive } from '$lib/merge';
-	import { Check, Smartphone, Download } from 'lucide-svelte';
+	import { Check, Smartphone, Download, Eye } from 'lucide-svelte';
 	import { t, getLocale } from '$lib/i18n.svelte';
 
 	const result = $derived(appState.mergeResult);
@@ -77,7 +77,7 @@
 		</div>
 	</div>
 
-	<!-- Download -->
+	<!-- Actions -->
 	<div class="text-center">
 		<button
 			class="rounded-xl px-8 py-4 text-base font-semibold tracking-tight transition-all hover:-translate-y-0.5"
@@ -86,7 +86,15 @@
 		>
 			{t('export.download')}
 		</button>
-		<div class="mt-4">
+		<div class="mt-4 flex justify-center gap-4">
+			<button
+				class="flex items-center gap-2 text-sm font-medium transition-all"
+				style="color: var(--accent);"
+				onclick={() => appState.openExplorer(result.contents, t('explorer.mergedData'))}
+			>
+				<Eye size={16} />
+				{t('explorer.exploreResult')}
+			</button>
 			<button
 				class="text-sm font-medium transition-all"
 				style="color: var(--text-tertiary);"
