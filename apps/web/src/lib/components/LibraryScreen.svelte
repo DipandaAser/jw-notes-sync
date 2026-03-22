@@ -4,8 +4,8 @@
 	import { appState, type ImportedBackup } from '$lib/stores/app.svelte';
 	import { t, getLocale } from '$lib/i18n.svelte';
 	import { formatBytes } from '$lib/format';
-	import { loadBackupBytes, saveBackup } from '$lib/storage';
-	import { Star, Plus, Merge, Download, Eye, X, Smartphone, Loader } from 'lucide-svelte';
+	import { loadBackupBytes } from '$lib/storage';
+	import { Plus, Merge, Download, Eye, X, Smartphone, Loader } from 'lucide-svelte';
 
 	let loadingTruth = $state(false);
 	let addingFile = $state(false);
@@ -167,8 +167,7 @@
 		{/if}
 		{t('library.addBackup')}
 	</button>
-	{#if originals.length >= 2}
-		<button
+	<button
 			class="flex items-center gap-2 rounded-xl border px-6 py-3 text-sm font-semibold transition-all"
 			style="background: var(--surface-1); border-color: var(--border); color: var(--text-secondary);"
 			onclick={() => appState.startQuickMerge()}
@@ -176,7 +175,6 @@
 			<Merge size={18} />
 			{t('library.quickMerge')}
 		</button>
-	{/if}
 </div>
 
 <!-- Original files -->
@@ -210,12 +208,7 @@
 					{meta.fileName} · {formatBytes(meta.sizeBytes)}
 				</div>
 				<div class="flex flex-wrap gap-2">
-					{#each [
-						{ count: meta.stats.notes, label: t('stats.notes'), color: 'var(--stat-1)' },
-						{ count: meta.stats.highlights, label: t('stats.highlights'), color: 'var(--stat-2)' },
-						{ count: meta.stats.bookmarks, label: t('stats.bookmarks'), color: 'var(--stat-3)' },
-						{ count: meta.stats.tags, label: t('stats.tags'), color: 'var(--stat-4)' },
-					] as stat}
+					{#each [{ count: meta.stats.notes, label: t('stats.notes'), color: 'var(--stat-1)' }, { count: meta.stats.highlights, label: t('stats.highlights'), color: 'var(--stat-2)' }, { count: meta.stats.bookmarks, label: t('stats.bookmarks'), color: 'var(--stat-3)' }, { count: meta.stats.tags, label: t('stats.tags'), color: 'var(--stat-4)' }] as stat}
 						<span
 							class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium"
 							style="background: color-mix(in srgb, {stat.color} 15%, transparent); color: {stat.color};"
@@ -259,12 +252,7 @@
 					{meta.fileName} · {formatBytes(meta.sizeBytes)}
 				</div>
 				<div class="flex flex-wrap gap-2">
-					{#each [
-						{ count: meta.stats.notes, label: t('stats.notes'), color: 'var(--stat-1)' },
-						{ count: meta.stats.highlights, label: t('stats.highlights'), color: 'var(--stat-2)' },
-						{ count: meta.stats.bookmarks, label: t('stats.bookmarks'), color: 'var(--stat-3)' },
-						{ count: meta.stats.tags, label: t('stats.tags'), color: 'var(--stat-4)' },
-					] as stat}
+					{#each [{ count: meta.stats.notes, label: t('stats.notes'), color: 'var(--stat-1)' }, { count: meta.stats.highlights, label: t('stats.highlights'), color: 'var(--stat-2)' }, { count: meta.stats.bookmarks, label: t('stats.bookmarks'), color: 'var(--stat-3)' }, { count: meta.stats.tags, label: t('stats.tags'), color: 'var(--stat-4)' }] as stat}
 						<span
 							class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium"
 							style="background: color-mix(in srgb, {stat.color} 15%, transparent); color: {stat.color};"
