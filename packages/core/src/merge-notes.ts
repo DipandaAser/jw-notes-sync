@@ -1,5 +1,6 @@
 import type { Note } from './models.js';
 import type { IdMap } from './id-map.js';
+import type { NoteConflictStrategy } from './merge-config.js';
 
 const SEPARATOR = '\n\n---\n\n';
 
@@ -36,6 +37,7 @@ function concatenateContent(
 export interface MergeNotesOptions {
   deviceNameA: string;
   deviceNameB: string;
+  strategy?: NoteConflictStrategy;
 }
 
 /**
@@ -92,36 +94,52 @@ export function mergeNotes(
         const remapped = remapNote(noteA, newId, idMapA);
         merged.push({ ...remapped, Created: created, LastModified: lastModified });
       } else {
-        // Conflict — concatenate
-        const content = concatenateContent(
-          noteA.Content,
-          options.deviceNameA,
-          noteA.LastModified,
-          noteB.Content,
-          options.deviceNameB,
-          noteB.LastModified,
-        );
+        // Conflict — resolve based on strategy
+        const strategy = options.strategy ?? 'concatenate';
 
-        // Merge titles: prefer non-null, or concatenate if both differ
-        let title: string | null;
-        if (noteA.Title === noteB.Title) {
-          title = noteA.Title;
-        } else if (noteA.Title === null) {
-          title = noteB.Title;
-        } else if (noteB.Title === null) {
-          title = noteA.Title;
+        if (strategy === 'keepA') {
+          const remapped = remapNote(noteA, newId, idMapA);
+          merged.push({ ...remapped, Created: created, LastModified: lastModified });
+        } else if (strategy === 'keepB') {
+          const remapped = remapNote(noteB, newId, idMapB);
+          merged.push({ ...remapped, Created: created, LastModified: lastModified });
+        } else if (strategy === 'keepNewest') {
+          const winner = noteA.LastModified >= noteB.LastModified ? noteA : noteB;
+          const winnerIdMap = winner === noteA ? idMapA : idMapB;
+          const remapped = remapNote(winner, newId, winnerIdMap);
+          merged.push({ ...remapped, Created: created, LastModified: lastModified });
         } else {
-          title = `${noteA.Title} / ${noteB.Title}`;
-        }
+          // 'concatenate' (default)
+          const content = concatenateContent(
+            noteA.Content,
+            options.deviceNameA,
+            noteA.LastModified,
+            noteB.Content,
+            options.deviceNameB,
+            noteB.LastModified,
+          );
 
-        const remapped = remapNote(noteA, newId, idMapA);
-        merged.push({
-          ...remapped,
-          Title: title,
-          Content: content,
-          Created: created,
-          LastModified: lastModified,
-        });
+          // Merge titles: prefer non-null, or concatenate if both differ
+          let title: string | null;
+          if (noteA.Title === noteB.Title) {
+            title = noteA.Title;
+          } else if (noteA.Title === null) {
+            title = noteB.Title;
+          } else if (noteB.Title === null) {
+            title = noteA.Title;
+          } else {
+            title = `${noteA.Title} / ${noteB.Title}`;
+          }
+
+          const remapped = remapNote(noteA, newId, idMapA);
+          merged.push({
+            ...remapped,
+            Title: title,
+            Content: content,
+            Created: created,
+            LastModified: lastModified,
+          });
+        }
       }
 
       idMapA.set(TABLE, noteA.NoteId, newId);

@@ -19,6 +19,7 @@ import {
   buildArchive,
   type DatabaseContents,
   type JWLibraryArchive,
+  type MergeConfig,
 } from '@jw-notes-sync/core';
 import { webAdapter } from '$lib/adapter';
 import { appState, type MergeResult } from '$lib/stores/app.svelte';
@@ -47,7 +48,9 @@ function updateProgress(stepIndex: number) {
   };
 }
 
-export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryArchive): Promise<void> {
+export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryArchive, config?: MergeConfig): Promise<void> {
+  const mergeConfig = config ?? appState.mergeConfig;
+  const isDryRun = appState.dryRun;
   appState.mergeStatus = 'merging';
   appState.mergeError = null;
 
@@ -65,12 +68,12 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
 
     // Step 1: UserMarks + BlockRanges
     updateProgress(1);
-    const { merged: userMarks, winners } = mergeUserMarks(a.userMarks, b.userMarks, idMapA, idMapB);
+    const { merged: userMarks, winners } = mergeUserMarks(a.userMarks, b.userMarks, idMapA, idMapB, { strategy: mergeConfig.highlights });
     const blockRanges = mergeBlockRanges(a.blockRanges, b.blockRanges, idMapA, idMapB, winners);
 
     // Step 2: Notes
     updateProgress(2);
-    const notes = mergeNotes(a.notes, b.notes, idMapA, idMapB, { deviceNameA, deviceNameB });
+    const notes = mergeNotes(a.notes, b.notes, idMapA, idMapB, { deviceNameA, deviceNameB, strategy: mergeConfig.notes });
 
     // Step 3: Bookmarks
     updateProgress(3);
@@ -94,7 +97,7 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
 
     // Step 6: InputFields
     updateProgress(6);
-    const inputFields = mergeInputFields(a.inputFields, b.inputFields, idMapA, idMapB, { deviceNameA, deviceNameB });
+    const inputFields = mergeInputFields(a.inputFields, b.inputFields, idMapA, idMapB, { deviceNameA, deviceNameB, strategy: mergeConfig.inputFields });
 
     const contents: DatabaseContents = {
       locations,
@@ -128,32 +131,65 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
       }
     }
 
-    // Step 7: Build archive
-    updateProgress(7);
-    const archiveBytes = await buildArchive(webAdapter, contents, { mediaFiles });
-
-    const result: MergeResult = {
-      contents,
-      mediaFiles,
-      stats: {
-        notes: notes.length,
-        highlights: userMarks.length,
-        bookmarks: bookmarks.length,
-        tags: tags.length,
-        locations: locations.length,
-        inputFields: inputFields.length,
-      },
+    const mergeStats = {
+      notes: notes.length,
+      highlights: userMarks.length,
+      bookmarks: bookmarks.length,
+      tags: tags.length,
+      locations: locations.length,
+      inputFields: inputFields.length,
     };
 
-    appState.mergeResult = result;
-    appState.archiveBytes = archiveBytes;
-    appState.mergeStatus = 'done';
-    appState.mergeProgress = {
-      step: t('steps.done'),
-      percent: 100,
-      steps: MERGE_STEP_KEYS.map((key) => ({ name: t(key), status: 'done' })),
-    };
-    appState.goTo('export');
+    if (isDryRun) {
+      // Dry-run: skip archive build, go straight to explorer
+      updateProgress(7);
+      const result: MergeResult = { contents, mediaFiles, stats: mergeStats };
+      appState.mergeResult = result;
+      appState.mergeStatus = 'done';
+      appState.mergeProgress = {
+        step: t('steps.done'),
+        percent: 100,
+        steps: MERGE_STEP_KEYS.map((key) => ({ name: t(key), status: 'done' })),
+      };
+
+      // Log to history
+      appState.addMergeHistory({
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        sources: appState.backups.map((b) => ({ deviceName: b.deviceName, fileName: b.fileName })),
+        stats: mergeStats,
+        config: { ...mergeConfig },
+        dryRun: true,
+      });
+
+      appState.openExplorer(contents, t('config.dryRun.badge'));
+    } else {
+      // Full merge: build archive
+      updateProgress(7);
+      const archiveBytes = await buildArchive(webAdapter, contents, { mediaFiles });
+
+      const result: MergeResult = { contents, mediaFiles, stats: mergeStats };
+      appState.mergeResult = result;
+      appState.archiveBytes = archiveBytes;
+      appState.mergeStatus = 'done';
+      appState.mergeProgress = {
+        step: t('steps.done'),
+        percent: 100,
+        steps: MERGE_STEP_KEYS.map((key) => ({ name: t(key), status: 'done' })),
+      };
+
+      // Log to history
+      appState.addMergeHistory({
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        sources: appState.backups.map((b) => ({ deviceName: b.deviceName, fileName: b.fileName })),
+        stats: mergeStats,
+        config: { ...mergeConfig },
+        dryRun: false,
+      });
+
+      appState.goTo('export');
+    }
   } catch (err) {
     appState.mergeStatus = 'error';
     appState.mergeError = err instanceof Error ? err.message : String(err);

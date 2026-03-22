@@ -1,5 +1,6 @@
 import type { InputField } from './models.js';
 import type { IdMap } from './id-map.js';
+import type { InputFieldConflictStrategy } from './merge-config.js';
 
 /**
  * Build a natural key for InputField deduplication (after FK remapping).
@@ -11,6 +12,7 @@ function inputFieldKey(field: InputField): string {
 export interface MergeInputFieldsOptions {
   deviceNameA: string;
   deviceNameB: string;
+  strategy?: InputFieldConflictStrategy;
 }
 
 /**
@@ -56,15 +58,21 @@ export function mergeInputFields(
 
     if (existing) {
       if (existing.Value !== remapped.Value) {
-        if (!existing.Value) {
-          // A is empty — keep B's value
+        const strategy = options.strategy ?? 'smartMerge';
+        if (strategy === 'keepA') {
+          // Keep A's value (already in merged), do nothing
+        } else if (strategy === 'keepB') {
           existing.Value = remapped.Value;
-        } else if (!remapped.Value) {
-          // B is empty — keep A's value (already in merged)
         } else {
-          // Both non-empty — concatenate with device labels
-          existing.Value =
-            `[${options.deviceNameA}] ${existing.Value} | [${options.deviceNameB}] ${remapped.Value}`;
+          // 'smartMerge' (default)
+          if (!existing.Value) {
+            existing.Value = remapped.Value;
+          } else if (!remapped.Value) {
+            // B is empty — keep A's value (already in merged)
+          } else {
+            existing.Value =
+              `[${options.deviceNameA}] ${existing.Value} | [${options.deviceNameB}] ${remapped.Value}`;
+          }
         }
       }
       // Identical values → already in merged, skip

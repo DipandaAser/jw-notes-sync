@@ -1,5 +1,6 @@
 import type { UserMark, BlockRange } from './models.js';
 import type { IdMap } from './id-map.js';
+import type { HighlightConflictStrategy } from './merge-config.js';
 import { groupBy, buildReverseIndex } from './utils.js';
 
 /**
@@ -18,12 +19,18 @@ import { groupBy, buildReverseIndex } from './utils.js';
  * Returns the chosen source for each matched UserMark ('A' or 'B') keyed by
  * the new UserMarkId, so BlockRange merge knows which source's ranges to keep.
  */
+export interface MergeUserMarksOptions {
+  strategy?: HighlightConflictStrategy;
+}
+
 export function mergeUserMarks(
   marksA: UserMark[],
   marksB: UserMark[],
   idMapA: IdMap,
   idMapB: IdMap,
+  options?: MergeUserMarksOptions,
 ): { merged: UserMark[]; winners: Map<number, 'A' | 'B'> } {
+  const strategy = options?.strategy ?? 'keepNewest';
   const TABLE = 'UserMark';
   const merged: UserMark[] = [];
   const winners = new Map<number, 'A' | 'B'>();
@@ -44,8 +51,16 @@ export function mergeUserMarks(
     if (markB) {
       matchedBGuids.add(markB.UserMarkGuid);
 
-      // Pick winner: higher Version wins, A wins ties
-      const winner = markB.Version > markA.Version ? markB : markA;
+      // Pick winner based on strategy
+      let winner: UserMark;
+      if (strategy === 'keepA') {
+        winner = markA;
+      } else if (strategy === 'keepB') {
+        winner = markB;
+      } else {
+        // 'keepNewest': higher Version wins, A wins ties
+        winner = markB.Version > markA.Version ? markB : markA;
+      }
       const winnerSource: 'A' | 'B' = winner === markA ? 'A' : 'B';
       const winnerIdMap = winnerSource === 'A' ? idMapA : idMapB;
 

@@ -43,7 +43,7 @@ export { parseJWLibrary } from './parser.js';
 export { IdMap } from './id-map.js';
 export { mergeLocations, locationNaturalKey } from './merge-locations.js';
 export { mergeNotes, type MergeNotesOptions } from './merge-notes.js';
-export { mergeUserMarks, mergeBlockRanges } from './merge-usermarks.js';
+export { mergeUserMarks, mergeBlockRanges, type MergeUserMarksOptions } from './merge-usermarks.js';
 export { mergeBookmarks } from './merge-bookmarks.js';
 export { mergeTags, mergeTagMaps } from './merge-tags.js';
 export { mergeInputFields, type MergeInputFieldsOptions } from './merge-input-fields.js';
@@ -59,3 +59,13 @@ export {
 } from './merge-playlists.js';
 export { buildArchive, type BuildArchiveOptions } from './builder.js';
 export { groupBy, buildReverseIndex } from './utils.js';
+export {
+  type MergeConfig,
+  type MergePreset,
+  type NoteConflictStrategy,
+  type HighlightConflictStrategy,
+  type InputFieldConflictStrategy,
+  DEFAULT_MERGE_CONFIG,
+  presetToConfig,
+  MERGE_PRESETS,
+} from './merge-config.js';
