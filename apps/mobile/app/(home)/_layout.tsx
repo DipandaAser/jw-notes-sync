@@ -32,6 +32,13 @@ export default function HomeLayout() {
           headerBackVisible: false,
         }}
       />
+      <Stack.Screen
+        name="explorer"
+        options={{
+          title: t("explorer.title"),
+          headerShown: false,
+        }}
+      />
     </Stack>
   )
 }

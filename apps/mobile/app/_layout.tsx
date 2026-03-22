@@ -6,6 +6,7 @@ import { House, Settings } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import "../src/lib/i18n"
 import { importFromUri } from "../src/lib/import"
+import { useAppStore } from "../src/stores/app"
 import { getColors } from "../src/theme"
 
 export default function RootLayout() {
@@ -13,6 +14,10 @@ export default function RootLayout() {
   const colorScheme = useColorScheme()
   const isDark = colorScheme === "dark"
   const colors = getColors(isDark)
+
+  useEffect(() => {
+    useAppStore.getState().loadPersistedConfig()
+  }, [])
 
   useEffect(() => {
     const subscription = Linking.addEventListener("url", async (event) => {
