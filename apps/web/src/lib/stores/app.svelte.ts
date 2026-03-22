@@ -264,13 +264,13 @@ class AppState {
     return this.backups.length >= 2;
   }
 
-  reset() {
+  async reset() {
     // Clean up any pending backups that were saved during a cancelled merge
     if (this.pendingBackupIds.length > 0) {
       for (const id of this.pendingBackupIds) {
-        deleteBackup(id).catch(() => {});
+        try { await deleteBackup(id); } catch { /* may not exist yet */ }
       }
-      this.refreshStorage();
+      await this.refreshStorage();
     }
     this.pendingBackupIds = [];
     this.tab = 'home';
