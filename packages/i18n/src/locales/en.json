@@ -3,6 +3,20 @@
   "nav.settings": "Settings",
   "nav.toggleTheme": "Toggle theme",
 
+  "library.title": "Your library",
+  "library.sourceOfTruth": "Source of truth",
+  "library.sourceOfTruth.desc": "This is your latest merged backup — new files will be merged against it.",
+  "library.addBackup": "Add a backup",
+  "library.quickMerge": "Quick merge",
+  "library.quickMerge.desc": "Merge two files without saving to your library",
+  "library.originals": "Imported backups",
+  "library.merged": "Merged backups",
+  "library.badge.merged": "Merged",
+  "library.empty.title": "Your library is empty",
+  "library.empty.desc": "Import your first JW Library backups to get started.",
+  "library.empty.import": "Import backups",
+  "library.download": "Download",
+
   "import.title": "Import backups",
   "import.subtitle": "Select at least 2 .jwlibrary files to merge them",
   "import.hero.title": "Merge your notes",
@@ -46,6 +60,8 @@
   "export.shareDialog": "Export merged backup",
   "export.newMerge": "New merge",
   "export.newMergeFull": "Start a new merge",
+  "export.backToLibrary": "Back to library",
+  "export.savedAsTruth": "Saved as your new source of truth",
   "export.noResult": "No result",
   "export.noResultFull": "No merge available.",
   "export.back": "Back",
@@ -178,5 +194,6 @@
   "storage.clear": "Clear all stored backups",
   "storage.empty": "No stored backups",
 
+  "common.cancel": "Cancel",
   "common.error": "Error"
 }

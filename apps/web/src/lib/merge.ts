@@ -23,6 +23,7 @@ import {
 } from '@jw-notes-sync/core';
 import { webAdapter } from '$lib/adapter';
 import { appState, type MergeResult } from '$lib/stores/app.svelte';
+import { saveMergedBackup } from '$lib/storage';
 import { t } from '$lib/i18n.svelte';
 
 const MERGE_STEP_KEYS = [
@@ -162,6 +163,7 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
         dryRun: true,
       });
 
+      appState.pendingBackupIds = [];
       appState.openExplorer(contents, t('config.dryRun.badge'));
     } else {
       // Full merge: build archive
@@ -178,6 +180,22 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
         steps: MERGE_STEP_KEYS.map((key) => ({ name: t(key), status: 'done' })),
       };
 
+      // Save as source of truth in library mode
+      if (appState.mergeMode === 'library') {
+        const mergedId = crypto.randomUUID();
+        const now = new Date().toISOString().split('T')[0];
+        await saveMergedBackup(mergedId, archiveBytes, {
+          id: mergedId,
+          fileName: `MergedBackup_${now}.jwlibrary`,
+          deviceName: 'JW Notes Sync',
+          date: new Date().toISOString(),
+          stats: mergeStats,
+          parentIds: appState.backups.map((b) => b.id),
+        });
+        await appState.refreshSourceOfTruth();
+        await appState.refreshStorage();
+      }
+
       // Log to history
       appState.addMergeHistory({
         id: crypto.randomUUID(),
@@ -187,6 +205,9 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
         config: { ...mergeConfig },
         dryRun: false,
       });
+
+      // Merge succeeded — pending backups are now committed
+      appState.pendingBackupIds = [];
 
       appState.goTo('export');
     }

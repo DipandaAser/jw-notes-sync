@@ -65,7 +65,15 @@
 					},
 				};
 
-				appState.addBackup(backup, bytes);
+				// Only persist to storage in library mode
+				appState.addBackup(backup, appState.mergeMode === 'library' ? bytes : undefined);
+
+				// In library mode with a source of truth, auto-merge the first new file
+				if (appState.mergeMode === 'library' && appState.sourceOfTruth) {
+					loading = false;
+					await appState.startLibraryMerge(backup);
+					return;
+				}
 			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : t('import.error.generic');
@@ -139,7 +147,7 @@
 					},
 				};
 
-				appState.addBackup(backup, bytes);
+				appState.addBackup(backup, appState.mergeMode === 'library' ? bytes : undefined);
 			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : t('import.error.generic');
@@ -218,7 +226,7 @@
 {/if}
 
 <!-- Recent files -->
-{#if availableRecent.length > 0 && appState.backups.length === 0}
+{#if availableRecent.length > 0 && appState.backups.length === 0 && appState.mergeMode !== 'quick'}
 	<div class="mb-8">
 		<h3 class="mb-3 text-sm font-semibold uppercase tracking-wider" style="color: var(--text-tertiary);">
 			{t('import.recentFiles')}

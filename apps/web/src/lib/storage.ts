@@ -4,7 +4,7 @@
  */
 
 const DB_NAME = 'jw-notes-sync';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const META_STORE = 'backup-meta';
 const BLOB_STORE = 'backup-blobs';
 const CONFIG_STORE = 'config';
@@ -17,6 +17,9 @@ export interface BackupMeta {
 	stats: { notes: number; highlights: number; bookmarks: number; tags: number };
 	storedAt: string; // ISO timestamp
 	sizeBytes: number;
+	isMerged: boolean;
+	parentIds: string[];
+	isSourceOfTruth: boolean;
 }
 
 // ── IndexedDB helpers ────────────────────────────────────
@@ -27,8 +30,9 @@ function openDB(): Promise<IDBDatabase> {
 	if (cachedDB) return Promise.resolve(cachedDB);
 	return new Promise((resolve, reject) => {
 		const req = indexedDB.open(DB_NAME, DB_VERSION);
-		req.onupgradeneeded = () => {
+		req.onupgradeneeded = (event) => {
 			const db = req.result;
+			const oldVersion = event.oldVersion;
 			if (!db.objectStoreNames.contains(META_STORE)) {
 				db.createObjectStore(META_STORE, { keyPath: 'id' });
 			}
@@ -37,6 +41,24 @@ function openDB(): Promise<IDBDatabase> {
 			}
 			if (!db.objectStoreNames.contains(CONFIG_STORE)) {
 				db.createObjectStore(CONFIG_STORE);
+			}
+			// v1→v2: backfill new fields on existing metas
+			if (oldVersion < 2 && req.transaction) {
+				const store = req.transaction.objectStore(META_STORE);
+				const cursor = store.openCursor();
+				cursor.onsuccess = () => {
+					const c = cursor.result;
+					if (c) {
+						const meta = c.value as Record<string, unknown>;
+						if (meta.isMerged === undefined) {
+							meta.isMerged = false;
+							meta.parentIds = [];
+							meta.isSourceOfTruth = false;
+							c.update(meta);
+						}
+						c.continue();
+					}
+				};
 			}
 		};
 		req.onsuccess = () => {
@@ -151,10 +173,13 @@ async function opfsDelete(name: string): Promise<void> {
 export async function saveBackup(
 	id: string,
 	rawBytes: Uint8Array,
-	meta: Omit<BackupMeta, 'storedAt' | 'sizeBytes'>,
+	meta: Omit<BackupMeta, 'storedAt' | 'sizeBytes' | 'isMerged' | 'parentIds' | 'isSourceOfTruth'> & Partial<Pick<BackupMeta, 'isMerged' | 'parentIds' | 'isSourceOfTruth'>>,
 ): Promise<void> {
 	const db = await openDB();
 	const fullMeta: BackupMeta = {
+		isMerged: false,
+		parentIds: [],
+		isSourceOfTruth: false,
 		...meta,
 		storedAt: new Date().toISOString(),
 		sizeBytes: rawBytes.byteLength,
@@ -193,13 +218,47 @@ export async function listBackupMetas(): Promise<BackupMeta[]> {
 	return metas.sort((a, b) => b.storedAt.localeCompare(a.storedAt));
 }
 
-/** Delete a backup from both OPFS and IDB. */
+/** Delete a backup from both OPFS and IDB. Rejects merged files. */
 export async function deleteBackup(id: string): Promise<void> {
-	await opfsDelete(`backup-${id}.jwlibrary`);
 	const db = await openDB();
+	const meta = await idbGet<BackupMeta>(db, META_STORE, id);
+	if (meta?.isMerged) {
+		throw new Error('Cannot delete a merged backup');
+	}
+	await opfsDelete(`backup-${id}.jwlibrary`);
 	await idbDelete(db, META_STORE, id);
 	await idbDelete(db, BLOB_STORE, id);
+}
 
+/** Get the current source of truth (latest merged file). */
+export async function getSourceOfTruth(): Promise<BackupMeta | null> {
+	const metas = await listBackupMetas();
+	return metas.find((m) => m.isSourceOfTruth) ?? null;
+}
+
+/** Save a merged backup as the new source of truth. Clears the flag on the old truth. */
+export async function saveMergedBackup(
+	id: string,
+	rawBytes: Uint8Array,
+	meta: Omit<BackupMeta, 'storedAt' | 'sizeBytes' | 'isMerged' | 'isSourceOfTruth'>,
+): Promise<void> {
+	const db = await openDB();
+
+	// Clear old source of truth
+	const allMetas = await idbGetAll<BackupMeta>(db, META_STORE);
+	for (const m of allMetas) {
+		if (m.isSourceOfTruth) {
+			m.isSourceOfTruth = false;
+			await idbPut(db, META_STORE, m);
+		}
+	}
+
+	// Save new merged file as truth
+	await saveBackup(id, rawBytes, {
+		...meta,
+		isMerged: true,
+		isSourceOfTruth: true,
+	});
 }
 
 /** Delete all stored backups. */

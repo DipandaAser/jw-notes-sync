@@ -17,6 +17,66 @@ JW Notes Sync lets you:
 5. **Export** a single merged `.jwlibrary` file ready to import on any device
 6. **Sync** automatically via Google Drive or iCloud (optional, Phase 3)
 
+## How It Works
+
+### First Visit — Initial Merge
+
+```mermaid
+flowchart LR
+    A["📱 Device A\n.jwlibrary"] --> IMPORT[Import]
+    B["📱 Device B\n.jwlibrary"] --> IMPORT
+    IMPORT --> MERGE["⚙️ Merge Engine"]
+    MERGE --> TRUTH["⭐ Source of Truth\n(saved locally)"]
+    TRUTH --> DL["📥 Download\nmerged file"]
+```
+
+On your first visit, import two or more `.jwlibrary` backup files. The app merges them and saves the result as your **source of truth** — a single file that contains everything from all your devices.
+
+### Next Visits — Add & Sync
+
+```mermaid
+flowchart LR
+    NEW["📱 New backup\n.jwlibrary"] --> MERGE["⚙️ Auto-merge"]
+    TRUTH["⭐ Current\nSource of Truth"] --> MERGE
+    MERGE --> NEW_TRUTH["⭐ New\nSource of Truth"]
+    NEW_TRUTH --> DL["📥 Download"]
+```
+
+Each time you return with a new backup, just add it. The app automatically merges it against your existing source of truth, producing an updated version.
+
+### Persistent Library
+
+```mermaid
+flowchart TD
+    subgraph LIBRARY["📚 Your Library (stored locally)"]
+        SOT["⭐ Source of Truth\nLatest merged backup"]
+        O1["📱 Google Pixel 6a"]
+        O2["📱 iPad"]
+        O3["📱 Galaxy Tab"]
+    end
+
+    ADD["+ Add a backup"] -->|"new file"| AUTO["Auto-merge\nwith ⭐"]
+    AUTO --> SOT
+    QM["⚡ Quick merge"] -->|"pick 2 files"| STANDALONE["One-off merge\n(not saved)"]
+```
+
+Your library persists across sessions using OPFS/IndexedDB. The source of truth cannot be deleted. You can also do standalone "quick merges" without affecting your library.
+
+### Storage Architecture
+
+```mermaid
+flowchart TD
+    subgraph BROWSER["Browser Storage"]
+        OPFS["OPFS\n(raw .jwlibrary bytes)"]
+        IDB["IndexedDB\n(metadata + config)"]
+        LS["localStorage\n(theme, language, onboarding)"]
+    end
+
+    OPFS -->|"fallback"| IDB
+```
+
+All data stays in your browser. Nothing is sent to any server.
+
 ## Privacy & Architecture
 
 - **No backend.** Zero. Nothing is sent to any server we control.
