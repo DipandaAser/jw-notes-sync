@@ -224,11 +224,27 @@ class AppState {
   async initSync() {
     this.syncMeta = await loadSyncMeta();
     if (this.syncMeta?.lastSyncedAt) {
-      // Try silent re-auth
+      // User previously connected — show as connected (lazy re-auth on actual API calls)
+      this.syncStatus = 'connected';
+
+      // Try silent re-auth in background (may fail if GIS not loaded yet or popup blocked)
+      this.waitForGisAndAuth();
+    }
+  }
+
+  private async waitForGisAndAuth() {
+    // Wait for GIS script to load (up to 5 seconds)
+    for (let i = 0; i < 50; i++) {
+      if (typeof google !== 'undefined' && google?.accounts?.oauth2) break;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+    try {
       const ok = await trySilentAuth();
-      if (ok) {
-        this.syncStatus = 'connected';
+      if (!ok) {
+        // Silent auth failed — still show as connected but will re-auth on next API call
       }
+    } catch {
+      // GIS not loaded or auth failed — will prompt on next sync attempt
     }
   }
 
@@ -258,6 +274,10 @@ class AppState {
     this.syncStatus = 'syncing';
     this.syncError = null;
     try {
+      // Ensure we have a valid token (may prompt user if expired)
+      const { getAccessToken, signIn: gSignIn } = await import('$lib/gdrive');
+      if (!getAccessToken()) await gSignIn();
+
       const bytes = await loadBackupBytes(this.sourceOfTruth.id);
       if (!bytes) throw new Error('Source of truth not found in storage');
       await uploadSourceOfTruth(this.sourceOfTruth, bytes);
@@ -274,6 +294,10 @@ class AppState {
     this.syncStatus = 'syncing';
     this.syncError = null;
     try {
+      // Ensure we have a valid token
+      const { getAccessToken, signIn: gSignIn } = await import('$lib/gdrive');
+      if (!getAccessToken()) await gSignIn();
+
       const result = await downloadFromDrive();
       if (!result) throw new Error('No backup found on Google Drive');
       // Save as new source of truth
