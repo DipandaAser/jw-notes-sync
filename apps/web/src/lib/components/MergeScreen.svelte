@@ -61,7 +61,7 @@
 	</div>
 {:else}
 	<!-- Source comparison -->
-	<div class="mb-8 grid gap-6" style="grid-template-columns: 1fr 1fr;">
+	<div class="mb-8 grid gap-6" style="grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);">
 		<!-- Source A -->
 		<div class="rounded-xl border p-6" style="background: var(--surface-1); border-color: var(--border);">
 			<div class="mb-6 flex items-center gap-3 border-b pb-4" style="border-color: var(--border);">
@@ -71,8 +71,8 @@
 				>
 					A
 				</div>
-				<div>
-					<div class="font-semibold">{backupA.deviceName}</div>
+				<div class="min-w-0 flex-1">
+					<div class="truncate font-semibold">{backupA.deviceName}</div>
 					<div class="text-xs" style="color: var(--text-tertiary);">{formatDate(backupA.date)}</div>
 				</div>
 			</div>
@@ -100,8 +100,8 @@
 				>
 					B
 				</div>
-				<div>
-					<div class="font-semibold">{backupB.deviceName}</div>
+				<div class="min-w-0 flex-1">
+					<div class="truncate font-semibold">{backupB.deviceName}</div>
 					<div class="text-xs" style="color: var(--text-tertiary);">{formatDate(backupB.date)}</div>
 				</div>
 			</div>

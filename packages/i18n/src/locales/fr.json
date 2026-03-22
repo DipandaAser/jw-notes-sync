@@ -76,6 +76,7 @@
   "settings.language": "Langue",
   "settings.languageFr": "Français",
   "settings.languageEn": "English",
+  "settings.replayTutorial": "Revoir le tutoriel",
 
   "explorer.title": "Explorateur de données",
   "explorer.back": "Retour",
@@ -136,6 +137,36 @@
   "history.sources": "Sources",
   "history.result": "Résultat",
   "history.clear": "Effacer l'historique",
+
+  "import.trySample": "Essayer avec des données d'exemple",
+  "import.trySample.loading": "Chargement des exemples…",
+
+  "onboarding.step1.title": "Bienvenue sur JW Notes Sync",
+  "onboarding.step1.desc": "Cette application vous permet de fusionner les sauvegardes JW Library de plusieurs appareils en un seul fichier — sans perdre aucune note, surlignage ou signet.",
+  "onboarding.step2.title": "Importez vos sauvegardes",
+  "onboarding.step2.desc": "Glissez vos fichiers .jwlibrary ou parcourez pour les sélectionner. Vous pouvez aussi essayer nos données d'exemple pour voir comment ça marche.",
+  "onboarding.step3.title": "Fusionnez et téléchargez",
+  "onboarding.step3.desc": "Choisissez une stratégie de fusion, prévisualisez le résultat et téléchargez un fichier .jwlibrary fusionné prêt à importer sur n'importe quel appareil.",
+  "onboarding.step4.title": "Vos données restent privées",
+  "onboarding.step4.desc": "Tout s'exécute dans votre navigateur. Aucune donnée n'est envoyée à un serveur. Vos notes restent les vôtres.",
+  "onboarding.next": "Suivant",
+  "onboarding.back": "Retour",
+  "onboarding.done": "Commencer",
+  "onboarding.skip": "Passer",
+
+  "help.title": "Aide et FAQ",
+  "help.faq.what.q": "Qu'est-ce qu'un fichier .jwlibrary ?",
+  "help.faq.what.a": "C'est un fichier de sauvegarde exporté depuis JW Library. Il contient toutes vos notes, surlignages, signets, étiquettes et playlists dans une archive ZIP avec une base de données SQLite.",
+  "help.faq.how.q": "Comment exporter une sauvegarde depuis JW Library ?",
+  "help.faq.how.a": "Dans JW Library, allez dans le menu hamburger → Sauvegarde et restauration → Sauvegarder les données. Choisissez un emplacement pour enregistrer le fichier .jwlibrary.",
+  "help.faq.import.q": "Comment réimporter le fichier fusionné ?",
+  "help.faq.import.a": "Dans JW Library, allez dans Sauvegarde et restauration → Restaurer. Sélectionnez le fichier .jwlibrary fusionné. Attention : cela remplacera vos données actuelles par la version fusionnée.",
+  "help.faq.privacy.q": "Mes données sont-elles en sécurité ?",
+  "help.faq.privacy.a": "Oui. Tout s'exécute localement dans votre navigateur. Aucune donnée n'est envoyée à un serveur. Le code source est ouvert sur GitHub pour vérification.",
+  "help.faq.devices.q": "Puis-je fusionner plus de 2 appareils ?",
+  "help.faq.devices.a": "Actuellement, vous pouvez fusionner 2 sauvegardes à la fois. Pour fusionner 3+ appareils, fusionnez les deux premiers, puis fusionnez ce résultat avec la troisième sauvegarde.",
+  "help.faq.conflict.q": "Que se passe-t-il quand la même note diffère sur deux appareils ?",
+  "help.faq.conflict.a": "Par défaut, les deux versions sont conservées et concaténées avec des étiquettes d'appareil. Vous pouvez changer cela dans les paramètres de fusion pour ne garder que la version la plus récente ou préférer un appareil.",
 
   "common.error": "Erreur"
 }
