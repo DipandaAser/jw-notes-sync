@@ -225,7 +225,7 @@
 {/if}
 
 <!-- Recent files -->
-{#if availableRecent.length > 0 && appState.backups.length === 0}
+{#if availableRecent.length > 0 && appState.backups.length === 0 && appState.mergeMode !== 'quick'}
 	<div class="mb-8">
 		<h3 class="mb-3 text-sm font-semibold uppercase tracking-wider" style="color: var(--text-tertiary);">
 			{t('import.recentFiles')}
