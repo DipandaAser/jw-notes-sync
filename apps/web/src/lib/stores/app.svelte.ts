@@ -16,7 +16,7 @@ export interface ImportedBackup {
 
 export type Tab = 'home' | 'settings';
 
-export type Screen = 'import' | 'merge' | 'export';
+export type Screen = 'import' | 'merge' | 'export' | 'explore';
 
 export type MergeStatus = 'idle' | 'merging' | 'done' | 'error';
 
@@ -53,6 +53,9 @@ class AppState {
   mergeError = $state<string | null>(null);
   theme = $state<'light' | 'dark'>('light');
   archiveBytes = $state<Uint8Array | null>(null);
+  explorerData = $state<DatabaseContents | null>(null);
+  explorerLabel = $state<string>('');
+  previousScreen = $state<Screen>('import');
 
   constructor() {
     if (typeof window !== 'undefined') {
@@ -89,6 +92,19 @@ class AppState {
     this.screen = screen;
   }
 
+  openExplorer(data: DatabaseContents, label: string) {
+    this.explorerData = data;
+    this.explorerLabel = label;
+    this.previousScreen = this.screen;
+    this.goTo('explore');
+  }
+
+  closeExplorer() {
+    this.explorerData = null;
+    this.explorerLabel = '';
+    this.goTo(this.previousScreen);
+  }
+
   canMerge(): boolean {
     return this.backups.length >= 2;
   }
@@ -102,6 +118,9 @@ class AppState {
     this.mergeResult = null;
     this.mergeError = null;
     this.archiveBytes = null;
+    this.explorerData = null;
+    this.explorerLabel = '';
+    this.previousScreen = 'import';
   }
 }
 
