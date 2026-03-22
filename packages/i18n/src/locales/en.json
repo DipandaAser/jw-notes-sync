@@ -173,6 +173,8 @@
 
   "storage.title": "Storage",
   "storage.used": "{{used}} of {{quota}} used",
+  "storage.count_one": "{{count}} stored backup",
+  "storage.count_other": "{{count}} stored backups",
   "storage.clear": "Clear all stored backups",
   "storage.empty": "No stored backups",
 

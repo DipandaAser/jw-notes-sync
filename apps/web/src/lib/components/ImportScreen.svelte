@@ -4,6 +4,7 @@
 	import { appState, type ImportedBackup } from '$lib/stores/app.svelte';
 	import { Upload, X, Loader, Eye, FlaskConical, RotateCcw } from 'lucide-svelte';
 	import { t, getLocale } from '$lib/i18n.svelte';
+	import { formatBytes } from '$lib/format';
 
 	let dragging = $state(false);
 	let loading = $state(false);
@@ -33,11 +34,6 @@
 		}
 	}
 
-	function formatSize(bytes: number): string {
-		if (bytes < 1024) return `${bytes} B`;
-		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-		return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-	}
 
 	async function handleFiles(files: FileList | null) {
 		if (!files) return;
@@ -236,7 +232,7 @@
 					<div class="min-w-0 flex-1">
 						<div class="truncate text-sm font-medium">{meta.deviceName}</div>
 						<div class="text-xs" style="color: var(--text-tertiary);">
-							{meta.fileName} · {formatSize(meta.sizeBytes)}
+							{meta.fileName} · {formatBytes(meta.sizeBytes)}
 						</div>
 					</div>
 					<button

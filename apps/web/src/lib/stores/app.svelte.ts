@@ -3,7 +3,7 @@ import { DEFAULT_MERGE_CONFIG } from '@jw-notes-sync/core';
 import {
   saveBackup,
   deleteBackup,
-  saveMergeConfig,
+  saveMergeConfig as persistMergeConfig,
   loadMergeConfig,
   listBackupMetas,
   loadBackupBytes,
@@ -190,7 +190,7 @@ class AppState {
   }
 
   saveMergeConfig() {
-    saveMergeConfig({ ...this.mergeConfig });
+    persistMergeConfig({ ...this.mergeConfig });
   }
 
   goToTab(tab: Tab) {

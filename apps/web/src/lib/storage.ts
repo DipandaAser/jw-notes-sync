@@ -21,7 +21,10 @@ export interface BackupMeta {
 
 // ── IndexedDB helpers ────────────────────────────────────
 
+let cachedDB: IDBDatabase | null = null;
+
 function openDB(): Promise<IDBDatabase> {
+	if (cachedDB) return Promise.resolve(cachedDB);
 	return new Promise((resolve, reject) => {
 		const req = indexedDB.open(DB_NAME, DB_VERSION);
 		req.onupgradeneeded = () => {
@@ -36,7 +39,11 @@ function openDB(): Promise<IDBDatabase> {
 				db.createObjectStore(CONFIG_STORE);
 			}
 		};
-		req.onsuccess = () => resolve(req.result);
+		req.onsuccess = () => {
+			cachedDB = req.result;
+			cachedDB.onclose = () => { cachedDB = null; };
+			resolve(cachedDB);
+		};
 		req.onerror = () => reject(req.error);
 	});
 }
@@ -162,7 +169,7 @@ export async function saveBackup(
 
 	// Always store metadata in IDB
 	await idbPut(db, META_STORE, fullMeta);
-	db.close();
+
 }
 
 /** Load raw backup bytes by id. Checks OPFS first, then IDB. */
@@ -174,7 +181,7 @@ export async function loadBackupBytes(id: string): Promise<Uint8Array | null> {
 	// Fallback to IDB
 	const db = await openDB();
 	const data = await idbGet<Uint8Array>(db, BLOB_STORE, id);
-	db.close();
+
 	return data ?? null;
 }
 
@@ -182,7 +189,7 @@ export async function loadBackupBytes(id: string): Promise<Uint8Array | null> {
 export async function listBackupMetas(): Promise<BackupMeta[]> {
 	const db = await openDB();
 	const metas = await idbGetAll<BackupMeta>(db, META_STORE);
-	db.close();
+
 	return metas.sort((a, b) => b.storedAt.localeCompare(a.storedAt));
 }
 
@@ -192,7 +199,7 @@ export async function deleteBackup(id: string): Promise<void> {
 	const db = await openDB();
 	await idbDelete(db, META_STORE, id);
 	await idbDelete(db, BLOB_STORE, id);
-	db.close();
+
 }
 
 /** Delete all stored backups. */
@@ -206,21 +213,21 @@ export async function clearAllBackups(): Promise<void> {
 	const db = await openDB();
 	await idbClear(db, META_STORE);
 	await idbClear(db, BLOB_STORE);
-	db.close();
+
 }
 
 /** Save merge config to IDB. */
 export async function saveMergeConfig(config: unknown): Promise<void> {
 	const db = await openDB();
 	await idbPut(db, CONFIG_STORE, config, 'mergeConfig');
-	db.close();
+
 }
 
 /** Load merge config from IDB. */
 export async function loadMergeConfig(): Promise<unknown | null> {
 	const db = await openDB();
 	const config = await idbGet(db, CONFIG_STORE, 'mergeConfig');
-	db.close();
+
 	return config ?? null;
 }
 

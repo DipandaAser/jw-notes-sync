@@ -173,6 +173,8 @@
 
   "storage.title": "Stockage",
   "storage.used": "{{used}} sur {{quota}} utilisés",
+  "storage.count_one": "{{count}} sauvegarde stockée",
+  "storage.count_other": "{{count}} sauvegardes stockées",
   "storage.clear": "Supprimer toutes les sauvegardes stockées",
   "storage.empty": "Aucune sauvegarde stockée",
 

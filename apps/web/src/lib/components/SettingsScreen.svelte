@@ -2,6 +2,7 @@
 	import { Mail, Github, Globe, History, Trash2, Smartphone, RotateCcw, HardDrive } from 'lucide-svelte';
 	import { t, getLocale, setLocale, type SupportedLocale } from '$lib/i18n.svelte';
 	import { appState } from '$lib/stores/app.svelte';
+	import { formatBytes } from '$lib/format';
 	import HelpScreen from './HelpScreen.svelte';
 
 	function toggleLanguage() {
@@ -27,13 +28,6 @@
 		} catch {
 			return iso;
 		}
-	}
-
-	function formatBytes(bytes: number): string {
-		if (bytes < 1024) return `${bytes} B`;
-		if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-		if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-		return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 	}
 
 	const storagePercent = $derived(
@@ -125,7 +119,7 @@
 
 	{#if appState.recentFiles.length > 0}
 		<div class="mb-2 text-xs" style="color: var(--text-tertiary);">
-			{appState.recentFiles.length} stored backup{appState.recentFiles.length !== 1 ? 's' : ''}
+			{t('storage.count', { count: appState.recentFiles.length })}
 		</div>
 		<button
 			class="flex items-center gap-1 text-xs font-medium transition-all"
