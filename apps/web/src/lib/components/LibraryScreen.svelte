@@ -5,7 +5,7 @@
 	import { t, getLocale } from '$lib/i18n.svelte';
 	import { formatBytes } from '$lib/format';
 	import { loadBackupBytes } from '$lib/storage';
-	import { Plus, Merge, Download, Eye, X, Smartphone, Loader } from 'lucide-svelte';
+	import { Plus, Merge, Download, Eye, Smartphone, Loader } from 'lucide-svelte';
 
 	let loadingTruth = $state(false);
 	let addingFile = $state(false);
@@ -192,15 +192,7 @@
 					<Smartphone size={16} style="color: var(--text-tertiary);" />
 					<span class="min-w-0 flex-1 truncate text-sm font-semibold">{meta.deviceName}</span>
 					<span class="text-xs" style="color: var(--text-tertiary);">{formatDate(meta.date)}</span>
-					<button
-						class="grid h-7 w-7 shrink-0 place-items-center rounded-full transition-all hover:opacity-70"
-						style="background: var(--surface-2); color: var(--text-tertiary);"
-						onclick={() => appState.removeBackup(meta.id)}
-						aria-label={t('import.backups.remove')}
-					>
-						<X size={14} />
-					</button>
-				</div>
+					</div>
 				<div class="mb-3 text-xs" style="color: var(--text-tertiary);">
 					{meta.fileName} · {formatBytes(meta.sizeBytes)}
 				</div>
