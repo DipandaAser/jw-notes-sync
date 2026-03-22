@@ -4,6 +4,7 @@
  * and Drive API v3 REST with fetch for file operations.
  */
 
+import { PUBLIC_GOOGLE_CLIENT_ID } from '$env/static/public';
 import { saveConfig, loadConfig, deleteConfig, type BackupMeta } from './storage';
 
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
@@ -46,12 +47,7 @@ export function getAccessToken(): string | null {
 }
 
 function getClientId(): string {
-	// SvelteKit exposes PUBLIC_ env vars at build time via import.meta.env
-	try {
-		return (import.meta.env as Record<string, string>)['PUBLIC_GOOGLE_CLIENT_ID'] ?? '';
-	} catch {
-		return '';
-	}
+	return PUBLIC_GOOGLE_CLIENT_ID ?? '';
 }
 
 function isGisLoaded(): boolean {
