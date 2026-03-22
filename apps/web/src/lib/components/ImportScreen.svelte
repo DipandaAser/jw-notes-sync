@@ -66,6 +66,13 @@
 				};
 
 				appState.addBackup(backup, bytes);
+
+				// In library mode with a source of truth, auto-merge the first new file
+				if (appState.mergeMode === 'library' && appState.sourceOfTruth) {
+					loading = false;
+					await appState.startLibraryMerge(backup);
+					return;
+				}
 			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : t('import.error.generic');

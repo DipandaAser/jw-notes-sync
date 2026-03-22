@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { appState } from '$lib/stores/app.svelte';
 	import { downloadArchive } from '$lib/merge';
-	import { Check, Smartphone, Download, Eye } from 'lucide-svelte';
+	import { Check, Smartphone, Download, Eye, Star } from 'lucide-svelte';
 	import { t, getLocale } from '$lib/i18n.svelte';
 
 	const result = $derived(appState.mergeResult);
@@ -39,6 +39,12 @@
 		<p class="text-base" style="color: var(--text-secondary);">
 			{t('export.subtitleFull', { count: appState.backups.length })}
 		</p>
+		{#if appState.mergeMode === 'library'}
+			<div class="mt-3 flex items-center justify-center gap-1.5 text-sm font-medium" style="color: var(--accent);">
+				<Star size={14} />
+				{t('export.savedAsTruth')}
+			</div>
+		{/if}
 	</div>
 
 	<!-- Stats grid -->
@@ -100,7 +106,7 @@
 				style="color: var(--text-tertiary);"
 				onclick={startOver}
 			>
-				{t('export.newMergeFull')}
+				{appState.mergeMode === 'library' ? t('export.backToLibrary') : t('export.newMergeFull')}
 			</button>
 		</div>
 	</div>

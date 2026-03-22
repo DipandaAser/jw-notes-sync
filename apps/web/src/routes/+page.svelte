@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { appState } from '$lib/stores/app.svelte';
+	import LibraryScreen from '$lib/components/LibraryScreen.svelte';
 	import ImportScreen from '$lib/components/ImportScreen.svelte';
 	import MergeScreen from '$lib/components/MergeScreen.svelte';
 	import ExportScreen from '$lib/components/ExportScreen.svelte';
@@ -11,6 +12,8 @@
 	<SettingsScreen />
 {:else if appState.screen === 'explore'}
 	<DataExplorer />
+{:else if appState.screen === 'library'}
+	<LibraryScreen />
 {:else if appState.screen === 'import'}
 	<ImportScreen />
 {:else if appState.screen === 'merge'}

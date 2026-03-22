@@ -3,10 +3,12 @@ import { DEFAULT_MERGE_CONFIG } from '@jw-notes-sync/core';
 import {
   saveBackup,
   deleteBackup,
+  saveMergedBackup,
   saveMergeConfig as persistMergeConfig,
   loadMergeConfig,
   listBackupMetas,
   loadBackupBytes,
+  getSourceOfTruth,
   clearAllBackups,
   getStorageUsage,
   type BackupMeta,
@@ -30,7 +32,9 @@ export interface ImportedBackup {
 
 export type Tab = 'home' | 'settings';
 
-export type Screen = 'import' | 'merge' | 'export' | 'explore';
+export type Screen = 'library' | 'import' | 'merge' | 'export' | 'explore';
+
+export type MergeMode = 'library' | 'quick';
 
 export type MergeStatus = 'idle' | 'merging' | 'done' | 'error';
 
@@ -81,7 +85,9 @@ function saveHistory(history: MergeHistoryEntry[]) {
 
 class AppState {
   tab = $state<Tab>('home');
-  screen = $state<Screen>('import');
+  screen = $state<Screen>('library');
+  mergeMode = $state<MergeMode>('library');
+  sourceOfTruth = $state<BackupMeta | null>(null);
   backups = $state<ImportedBackup[]>([]);
   mergeStatus = $state<MergeStatus>('idle');
   mergeProgress = $state<MergeProgress>({
@@ -178,11 +184,13 @@ class AppState {
 
   async clearStorage() {
     await clearAllBackups();
+    this.sourceOfTruth = null;
     await this.refreshStorage();
   }
 
   async initStorage() {
     await this.refreshStorage();
+    this.sourceOfTruth = await getSourceOfTruth();
     const savedConfig = await loadMergeConfig();
     if (savedConfig) {
       this.mergeConfig = savedConfig as MergeConfig;
@@ -195,6 +203,9 @@ class AppState {
 
   goToTab(tab: Tab) {
     this.tab = tab;
+    if (tab === 'home') {
+      this.screen = 'library';
+    }
   }
 
   goTo(screen: Screen) {
@@ -244,13 +255,17 @@ class AppState {
   }
 
   canMerge(): boolean {
+    if (this.mergeMode === 'library' && this.sourceOfTruth && this.backups.length >= 1) {
+      return true;
+    }
     return this.backups.length >= 2;
   }
 
   reset() {
     this.tab = 'home';
-    this.screen = 'import';
+    this.screen = 'library';
     this.backups = [];
+    this.mergeMode = 'library';
     this.mergeStatus = 'idle';
     this.mergeProgress = { step: '', percent: 0, steps: [] };
     this.mergeResult = null;
@@ -258,7 +273,39 @@ class AppState {
     this.archiveBytes = null;
     this.explorerData = null;
     this.explorerLabel = '';
-    this.previousScreen = 'import';
+    this.previousScreen = 'library';
+  }
+
+  /** Start a library merge: load the truth as backup A, new file becomes B. */
+  async startLibraryMerge(newBackup: ImportedBackup): Promise<boolean> {
+    if (!this.sourceOfTruth) return false;
+    const truthBytes = await loadBackupBytes(this.sourceOfTruth.id);
+    if (!truthBytes) return false;
+    const truthArchive = await parseJWLibrary(webAdapter, truthBytes);
+    const truthBackup: ImportedBackup = {
+      id: this.sourceOfTruth.id,
+      fileName: this.sourceOfTruth.fileName,
+      deviceName: this.sourceOfTruth.deviceName,
+      date: this.sourceOfTruth.date,
+      archive: truthArchive,
+      stats: this.sourceOfTruth.stats,
+    };
+    this.backups = [truthBackup, newBackup];
+    this.mergeMode = 'library';
+    this.goTo('merge');
+    return true;
+  }
+
+  /** Start quick merge mode (standalone, no persistence). */
+  startQuickMerge() {
+    this.backups = [];
+    this.mergeMode = 'quick';
+    this.goTo('import');
+  }
+
+  /** Refresh source of truth from storage. */
+  async refreshSourceOfTruth() {
+    this.sourceOfTruth = await getSourceOfTruth();
   }
 }
 

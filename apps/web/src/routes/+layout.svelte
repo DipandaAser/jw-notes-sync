@@ -26,7 +26,7 @@
 		class="sticky top-0 z-50 flex items-center justify-between border-b px-6 py-3"
 		style="background: var(--surface-0); border-color: var(--border);"
 	>
-		<button class="flex items-center gap-3" onclick={() => appState.goTo('import')}>
+		<button class="flex items-center gap-3" onclick={() => appState.goTo('library')}>
 			<div
 				class="grid h-9 w-9 place-items-center rounded-full text-sm font-bold text-white"
 				style="background: var(--color-jw-purple);"

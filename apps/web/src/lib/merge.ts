@@ -23,6 +23,7 @@ import {
 } from '@jw-notes-sync/core';
 import { webAdapter } from '$lib/adapter';
 import { appState, type MergeResult } from '$lib/stores/app.svelte';
+import { saveMergedBackup } from '$lib/storage';
 import { t } from '$lib/i18n.svelte';
 
 const MERGE_STEP_KEYS = [
@@ -177,6 +178,22 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
         percent: 100,
         steps: MERGE_STEP_KEYS.map((key) => ({ name: t(key), status: 'done' })),
       };
+
+      // Save as source of truth in library mode
+      if (appState.mergeMode === 'library') {
+        const mergedId = crypto.randomUUID();
+        const now = new Date().toISOString().split('T')[0];
+        await saveMergedBackup(mergedId, archiveBytes, {
+          id: mergedId,
+          fileName: `MergedBackup_${now}.jwlibrary`,
+          deviceName: 'JW Notes Sync',
+          date: new Date().toISOString(),
+          stats: mergeStats,
+          parentIds: appState.backups.map((b) => b.id),
+        });
+        await appState.refreshSourceOfTruth();
+        await appState.refreshStorage();
+      }
 
       // Log to history
       appState.addMergeHistory({
