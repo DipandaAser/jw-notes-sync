@@ -49,6 +49,7 @@ export interface MergeHistoryEntry {
   dryRun: boolean;
 }
 
+const ONBOARDING_KEY = 'jw-notes-sync-onboarding-seen';
 const HISTORY_KEY = 'jw-notes-sync-merge-history';
 
 function loadHistory(): MergeHistoryEntry[] {
@@ -82,6 +83,10 @@ class AppState {
   mergeConfig = $state<MergeConfig>({ ...DEFAULT_MERGE_CONFIG });
   dryRun = $state<boolean>(false);
   mergeHistory = $state<MergeHistoryEntry[]>(loadHistory());
+  showOnboarding = $state<boolean>(
+    typeof window !== 'undefined' ? !localStorage.getItem(ONBOARDING_KEY) : false,
+  );
+  onboardingStep = $state<number>(0);
   explorerData = $state<DatabaseContents | null>(null);
   explorerLabel = $state<string>('');
   previousScreen = $state<Screen>('import');
@@ -138,6 +143,18 @@ class AppState {
       this.mergeProgress = { step: '', percent: 0, steps: [] };
     }
     this.goTo(this.previousScreen);
+  }
+
+  completeOnboarding() {
+    this.showOnboarding = false;
+    this.onboardingStep = 0;
+    localStorage.setItem(ONBOARDING_KEY, '1');
+  }
+
+  resetOnboarding() {
+    localStorage.removeItem(ONBOARDING_KEY);
+    this.showOnboarding = true;
+    this.onboardingStep = 0;
   }
 
   addMergeHistory(entry: MergeHistoryEntry) {

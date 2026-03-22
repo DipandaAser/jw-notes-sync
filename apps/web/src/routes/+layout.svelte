@@ -5,6 +5,7 @@
 	import { House, Settings, Sun, Moon } from 'lucide-svelte';
 	import { initI18n, t } from '$lib/i18n.svelte';
 	import { onMount } from 'svelte';
+	import OnboardingOverlay from '$lib/components/OnboardingOverlay.svelte';
 
 	let { children } = $props();
 
@@ -78,3 +79,5 @@
 		</button>
 	</nav>
 </div>
+
+<OnboardingOverlay />

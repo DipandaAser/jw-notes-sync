@@ -2,11 +2,12 @@
 	import { parseJWLibrary } from '@jw-notes-sync/core';
 	import { webAdapter } from '$lib/adapter';
 	import { appState, type ImportedBackup } from '$lib/stores/app.svelte';
-	import { Upload, X, Loader, Eye } from 'lucide-svelte';
+	import { Upload, X, Loader, Eye, FlaskConical } from 'lucide-svelte';
 	import { t, getLocale } from '$lib/i18n.svelte';
 
 	let dragging = $state(false);
 	let loading = $state(false);
+	let loadingSamples = $state(false);
 	let error = $state<string | null>(null);
 
 	async function handleFiles(files: FileList | null) {
@@ -80,6 +81,46 @@
 	function goToMerge() {
 		appState.goTo('merge');
 	}
+
+	async function loadSampleData() {
+		if (loadingSamples) return;
+		loadingSamples = true;
+		error = null;
+
+		try {
+			const base = import.meta.env.BASE_URL;
+			const [resA, resB] = await Promise.all([
+				fetch(`${base}samples/sample-device-a.jwlibrary`),
+				fetch(`${base}samples/sample-device-b.jwlibrary`),
+			]);
+
+			for (const res of [resA, resB]) {
+				const bytes = new Uint8Array(await res.arrayBuffer());
+				const archive = await parseJWLibrary(webAdapter, bytes);
+				const db = archive.database;
+
+				const backup: ImportedBackup = {
+					id: crypto.randomUUID(),
+					fileName: res.url.split('/').pop() ?? 'sample.jwlibrary',
+					deviceName: archive.manifest.userDataBackup.deviceName,
+					date: archive.manifest.creationDate,
+					archive,
+					stats: {
+						notes: db.notes.length,
+						highlights: db.userMarks.length,
+						bookmarks: db.bookmarks.length,
+						tags: db.tags.length,
+					},
+				};
+
+				appState.addBackup(backup);
+			}
+		} catch (err) {
+			error = err instanceof Error ? err.message : t('import.error.generic');
+		} finally {
+			loadingSamples = false;
+		}
+	}
 </script>
 
 <!-- Hero -->
@@ -129,6 +170,26 @@
 		>
 	</div>
 </label>
+
+<!-- Try sample data -->
+{#if appState.backups.length === 0}
+	<div class="mb-8 text-center">
+		<button
+			class="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all"
+			style="background: var(--surface-1); border: 1px solid var(--border); color: var(--text-secondary);"
+			onclick={loadSampleData}
+			disabled={loadingSamples}
+		>
+			{#if loadingSamples}
+				<Loader size={16} class="animate-spin" />
+				{t('import.trySample.loading')}
+			{:else}
+				<FlaskConical size={16} style="color: var(--accent);" />
+				{t('import.trySample')}
+			{/if}
+		</button>
+	</div>
+{/if}
 
 <!-- Error -->
 {#if error}

@@ -137,5 +137,35 @@
   "history.result": "Result",
   "history.clear": "Clear history",
 
+  "import.trySample": "Try with sample data",
+  "import.trySample.loading": "Loading samples…",
+
+  "onboarding.step1.title": "Welcome to JW Notes Sync",
+  "onboarding.step1.desc": "This app lets you merge JW Library backups from multiple devices into one file — without losing any notes, highlights, or bookmarks.",
+  "onboarding.step2.title": "Import your backups",
+  "onboarding.step2.desc": "Drop your .jwlibrary files or browse to select them. You can also try our sample data to see how it works.",
+  "onboarding.step3.title": "Merge & download",
+  "onboarding.step3.desc": "Choose a merge strategy, preview the result, and download a single merged .jwlibrary file ready to import on any device.",
+  "onboarding.step4.title": "Your data stays private",
+  "onboarding.step4.desc": "Everything runs in your browser. No data is ever sent to a server. Your notes remain yours.",
+  "onboarding.next": "Next",
+  "onboarding.back": "Back",
+  "onboarding.done": "Get started",
+  "onboarding.skip": "Skip",
+
+  "help.title": "Help & FAQ",
+  "help.faq.what.q": "What is a .jwlibrary file?",
+  "help.faq.what.a": "It's a backup file exported from JW Library. It contains all your notes, highlights, bookmarks, tags, and playlists in a ZIP archive with a SQLite database.",
+  "help.faq.how.q": "How do I export a backup from JW Library?",
+  "help.faq.how.a": "In JW Library, go to the hamburger menu → Backup & Restore → Back Up Data. Choose a location to save the .jwlibrary file.",
+  "help.faq.import.q": "How do I import the merged file back?",
+  "help.faq.import.a": "In JW Library, go to Backup & Restore → Restore. Select the merged .jwlibrary file. Note: this will replace your current data with the merged version.",
+  "help.faq.privacy.q": "Is my data safe?",
+  "help.faq.privacy.a": "Yes. Everything runs locally in your browser. No data is uploaded to any server. The source code is open on GitHub for anyone to verify.",
+  "help.faq.devices.q": "Can I merge more than 2 devices?",
+  "help.faq.devices.a": "Currently, you can merge 2 backups at a time. To merge 3+ devices, merge the first two, then merge that result with the third backup.",
+  "help.faq.conflict.q": "What happens when the same note is different on two devices?",
+  "help.faq.conflict.a": "By default, both versions are kept and concatenated with device labels. You can change this in the merge settings to keep only the newest version or prefer one device.",
+
   "common.error": "Error"
 }
