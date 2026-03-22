@@ -9,25 +9,24 @@ import { useState } from 'react';
 
 export default function ImportScreen() {
   const router = useRouter();
-  const sourceOfTruth = useAppStore((s) => s.sourceOfTruth);
-  const mergeMode = useAppStore((s) => s.mergeMode);
-
-  // Redirect to library if there's a source of truth and we're not in quick merge mode
-  if (sourceOfTruth && mergeMode !== 'quick') {
-    return <Redirect href="/(home)/library" />;
-  }
   const { t, i18n } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const colors = getColors(isDark);
 
+  const sourceOfTruth = useAppStore((s) => s.sourceOfTruth);
+  const mergeMode = useAppStore((s) => s.mergeMode);
   const backups = useAppStore((s) => s.backups);
   const removeBackup = useAppStore((s) => s.removeBackup);
   const canMerge = useAppStore((s) => s.canMerge);
   const goTo = useAppStore((s) => s.goTo);
-
   const openExplorer = useAppStore((s) => s.openExplorer);
   const [importing, setImporting] = useState(false);
+
+  // Redirect to library if there's a source of truth and we're not in quick merge mode
+  if (sourceOfTruth && mergeMode !== 'quick') {
+    return <Redirect href="/(home)/library" />;
+  }
 
   function formatDate(iso: string): string {
     try {
