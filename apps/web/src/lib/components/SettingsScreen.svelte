@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Mail, Github, Globe, History, Trash2, Smartphone, HelpCircle, RotateCcw } from 'lucide-svelte';
+	import { Mail, Github, Globe, History, Trash2, Smartphone, RotateCcw } from 'lucide-svelte';
 	import { t, getLocale, setLocale, type SupportedLocale } from '$lib/i18n.svelte';
 	import { appState } from '$lib/stores/app.svelte';
 	import HelpScreen from './HelpScreen.svelte';
@@ -77,7 +77,7 @@
 		onclick={() => appState.resetOnboarding()}
 	>
 		<RotateCcw size={22} style="color: var(--accent);" />
-		<div class="font-semibold" style="color: var(--text-primary);">Replay tutorial</div>
+		<div class="font-semibold" style="color: var(--text-primary);">{t('settings.replayTutorial')}</div>
 	</button>
 </div>
 

@@ -5,8 +5,6 @@
 
 	const TOTAL_STEPS = 4;
 
-	const icons = [Merge, Upload, Download, ShieldCheck];
-
 	function next() {
 		if (appState.onboardingStep < TOTAL_STEPS - 1) {
 			appState.onboardingStep++;

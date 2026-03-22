@@ -95,6 +95,7 @@
 			]);
 
 			for (const res of [resA, resB]) {
+				if (!res.ok) throw new Error(`Failed to load sample: ${res.status}`);
 				const bytes = new Uint8Array(await res.arrayBuffer());
 				const archive = await parseJWLibrary(webAdapter, bytes);
 				const db = archive.database;
