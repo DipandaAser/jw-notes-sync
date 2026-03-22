@@ -1,7 +1,19 @@
 import { create } from 'zustand';
 import type { JWLibraryArchive, DatabaseContents, MergeConfig } from '@jw-notes-sync/core';
-import { DEFAULT_MERGE_CONFIG } from '@jw-notes-sync/core';
+import { DEFAULT_MERGE_CONFIG, parseJWLibrary } from '@jw-notes-sync/core';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {
+  saveBackup,
+  deleteBackup as deleteStoredBackup,
+  saveMergedBackup,
+  loadBackupBytes,
+  listBackupMetas,
+  getSourceOfTruth,
+  clearAllBackups,
+  getStorageUsage,
+  type BackupMeta,
+} from '../lib/storage';
+import { nativeAdapter } from '../adapter';
 
 export interface ImportedBackup {
   id: string;
@@ -18,6 +30,7 @@ export interface ImportedBackup {
 }
 
 export type Screen = 'import' | 'merge' | 'export' | 'explorer';
+export type MergeMode = 'library' | 'quick';
 
 export interface MergeHistoryEntry {
   id: string;
@@ -53,6 +66,7 @@ export interface MergeResult {
 
 interface AppStore {
   screen: Screen;
+  mergeMode: MergeMode;
   backups: ImportedBackup[];
   mergeStatus: MergeStatus;
   mergeProgress: MergeProgress;
@@ -63,8 +77,12 @@ interface AppStore {
   mergeHistory: MergeHistoryEntry[];
   explorerData: DatabaseContents | null;
   explorerLabel: string;
+  sourceOfTruth: BackupMeta | null;
+  recentFiles: BackupMeta[];
+  storageUsed: number;
+  pendingBackupIds: string[];
 
-  addBackup: (backup: ImportedBackup) => void;
+  addBackup: (backup: ImportedBackup, rawBytes?: Uint8Array) => void;
   removeBackup: (id: string) => void;
   goTo: (screen: Screen) => void;
   canMerge: () => boolean;
@@ -79,11 +97,18 @@ interface AppStore {
   openExplorer: (data: DatabaseContents, label: string) => void;
   closeExplorer: () => void;
   loadPersistedConfig: () => Promise<void>;
-  reset: () => void;
+  initStorage: () => Promise<void>;
+  refreshStorage: () => Promise<void>;
+  refreshSourceOfTruth: () => Promise<void>;
+  startLibraryMerge: (newBackup: ImportedBackup) => Promise<boolean>;
+  startQuickMerge: () => void;
+  clearStorage: () => Promise<void>;
+  reset: () => Promise<void>;
 }
 
 export const useAppStore = create<AppStore>((set, get) => ({
   screen: 'import',
+  mergeMode: 'library',
   backups: [],
   mergeStatus: 'idle',
   mergeProgress: { step: '', percent: 0, steps: [] },
@@ -94,11 +119,38 @@ export const useAppStore = create<AppStore>((set, get) => ({
   mergeHistory: [],
   explorerData: null,
   explorerLabel: '',
+  sourceOfTruth: null,
+  recentFiles: [],
+  storageUsed: 0,
+  pendingBackupIds: [],
 
-  addBackup: (backup) => set((s) => ({ backups: [...s.backups, backup] })),
-  removeBackup: (id) => set((s) => ({ backups: s.backups.filter((b) => b.id !== id) })),
+  addBackup: (backup, rawBytes) => {
+    set((s) => ({ backups: [...s.backups, backup] }));
+    if (rawBytes) {
+      set((s) => ({ pendingBackupIds: [...s.pendingBackupIds, backup.id] }));
+      saveBackup(backup.id, rawBytes, {
+        id: backup.id,
+        fileName: backup.fileName,
+        deviceName: backup.deviceName,
+        date: backup.date,
+        stats: backup.stats,
+      }).then(() => get().refreshStorage());
+    }
+  },
+
+  removeBackup: (id) => {
+    set((s) => ({ backups: s.backups.filter((b) => b.id !== id) }));
+    deleteStoredBackup(id).catch(() => {}).then(() => get().refreshStorage());
+  },
+
   goTo: (screen) => set({ screen }),
-  canMerge: () => get().backups.length >= 2,
+
+  canMerge: () => {
+    const s = get();
+    if (s.mergeMode === 'library' && s.sourceOfTruth && s.backups.length >= 1) return true;
+    return s.backups.length >= 2;
+  },
+
   setMergeStatus: (status) => set({ mergeStatus: status }),
   setMergeProgress: (progress) => set({ mergeProgress: progress }),
   setMergeResult: (result) => set({ mergeResult: result }),
@@ -135,10 +187,72 @@ export const useAppStore = create<AppStore>((set, get) => ({
     } catch { /* ignore */ }
   },
 
-  reset: () =>
+  initStorage: async () => {
+    await get().refreshStorage();
+    await get().refreshSourceOfTruth();
+    await get().loadPersistedConfig();
+  },
+
+  refreshStorage: async () => {
+    const recentFiles = await listBackupMetas();
+    const storageUsed = await getStorageUsage();
+    set({ recentFiles, storageUsed });
+  },
+
+  refreshSourceOfTruth: async () => {
+    const sourceOfTruth = await getSourceOfTruth();
+    set({ sourceOfTruth });
+  },
+
+  startLibraryMerge: async (newBackup) => {
+    const sot = get().sourceOfTruth;
+    if (!sot) return false;
+    const truthBytes = await loadBackupBytes(sot.id);
+    if (!truthBytes) return false;
+    const truthArchive = await parseJWLibrary(nativeAdapter, truthBytes);
+    const truthBackup: ImportedBackup = {
+      id: sot.id,
+      fileName: sot.fileName,
+      deviceName: sot.deviceName,
+      date: sot.date,
+      archive: truthArchive,
+      stats: sot.stats,
+    };
+    set({ backups: [truthBackup, newBackup], mergeMode: 'library' });
+    return true;
+  },
+
+  startQuickMerge: () => {
+    set({
+      backups: [],
+      mergeMode: 'quick',
+      mergeStatus: 'idle',
+      mergeResult: null,
+      mergeError: null,
+      archiveBytes: null,
+      mergeProgress: { step: '', percent: 0, steps: [] },
+    });
+  },
+
+  clearStorage: async () => {
+    await clearAllBackups();
+    set({ sourceOfTruth: null, recentFiles: [], storageUsed: 0 });
+  },
+
+  reset: async () => {
+    // Clean up pending backups on cancel
+    const pending = get().pendingBackupIds;
+    if (pending.length > 0) {
+      for (const id of pending) {
+        try { await deleteStoredBackup(id); } catch { /* may not exist */ }
+      }
+      await get().refreshStorage();
+    }
     set({
       screen: 'import',
+      mergeMode: 'library',
       backups: [],
+      pendingBackupIds: [],
       mergeStatus: 'idle',
       mergeProgress: { step: '', percent: 0, steps: [] },
       mergeResult: null,
@@ -146,5 +260,6 @@ export const useAppStore = create<AppStore>((set, get) => ({
       archiveBytes: null,
       explorerData: null,
       explorerLabel: '',
-    }),
+    });
+  },
 }));

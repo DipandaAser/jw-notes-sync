@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Pressable, FlatList, Alert, useColorScheme } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Redirect } from 'expo-router';
 import { Plus, Eye } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../src/stores/app';
@@ -9,6 +9,13 @@ import { useState } from 'react';
 
 export default function ImportScreen() {
   const router = useRouter();
+  const sourceOfTruth = useAppStore((s) => s.sourceOfTruth);
+  const mergeMode = useAppStore((s) => s.mergeMode);
+
+  // Redirect to library if there's a source of truth and we're not in quick merge mode
+  if (sourceOfTruth && mergeMode !== 'quick') {
+    return <Redirect href="/(home)/library" />;
+  }
   const { t, i18n } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';

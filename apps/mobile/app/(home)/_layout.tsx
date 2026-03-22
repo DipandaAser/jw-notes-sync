@@ -17,6 +17,7 @@ export default function HomeLayout() {
         contentStyle: { backgroundColor: colors.bg },
       }}
     >
+      <Stack.Screen name="library" options={{ title: "JW Notes Sync" }} />
       <Stack.Screen name="index" options={{ title: "JW Notes Sync" }} />
       <Stack.Screen
         name="merge"

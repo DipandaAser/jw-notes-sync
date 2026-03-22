@@ -23,6 +23,7 @@ import {
 import i18next from 'i18next';
 import { nativeAdapter } from '../adapter';
 import { useAppStore, type MergeResult } from '../stores/app';
+import { saveMergedBackup } from './storage';
 
 const MERGE_STEP_KEYS = [
   'steps.locations',
@@ -160,6 +161,25 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
       percent: 100,
       steps: MERGE_STEP_KEYS.map((key) => ({ name: t(key), status: 'done' })),
     });
+
+    // Save as source of truth in library mode
+    if (finalStore.mergeMode === 'library') {
+      const mergedId = `${Date.now()}-merged-${Math.random().toString(36).slice(2, 8)}`;
+      const now = new Date().toISOString().split('T')[0];
+      await saveMergedBackup(mergedId, archiveBytes, {
+        id: mergedId,
+        fileName: `MergedBackup_${now}.jwlibrary`,
+        deviceName: 'JW Notes Sync',
+        date: new Date().toISOString(),
+        stats: result.stats,
+        parentIds: finalStore.backups.map((b) => b.id),
+      });
+      await finalStore.refreshSourceOfTruth();
+      await finalStore.refreshStorage();
+    }
+
+    // Clear pending backups (merge succeeded)
+    useAppStore.setState({ pendingBackupIds: [] });
 
     finalStore.addMergeHistory({
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,

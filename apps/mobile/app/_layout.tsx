@@ -16,7 +16,7 @@ export default function RootLayout() {
   const colors = getColors(isDark)
 
   useEffect(() => {
-    useAppStore.getState().loadPersistedConfig()
+    useAppStore.getState().initStorage()
   }, [])
 
   useEffect(() => {
