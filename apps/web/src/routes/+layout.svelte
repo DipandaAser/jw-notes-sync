@@ -11,6 +11,7 @@
 
 	onMount(() => {
 		initI18n();
+		appState.initStorage();
 	});
 </script>
 

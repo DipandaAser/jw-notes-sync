@@ -138,6 +138,9 @@
   "history.result": "Résultat",
   "history.clear": "Effacer l'historique",
 
+  "import.recentFiles": "Fichiers récents",
+  "import.recentFiles.restore": "Restaurer",
+  "import.recentFiles.restoring": "Restauration…",
   "import.trySample": "Essayer avec des données d'exemple",
   "import.trySample.loading": "Chargement des exemples…",
 
@@ -167,6 +170,13 @@
   "help.faq.devices.a": "Actuellement, vous pouvez fusionner 2 sauvegardes à la fois. Pour fusionner 3+ appareils, fusionnez les deux premiers, puis fusionnez ce résultat avec la troisième sauvegarde.",
   "help.faq.conflict.q": "Que se passe-t-il quand la même note diffère sur deux appareils ?",
   "help.faq.conflict.a": "Par défaut, les deux versions sont conservées et concaténées avec des étiquettes d'appareil. Vous pouvez changer cela dans les paramètres de fusion pour ne garder que la version la plus récente ou préférer un appareil.",
+
+  "storage.title": "Stockage",
+  "storage.used": "{{used}} sur {{quota}} utilisés",
+  "storage.count_one": "{{count}} sauvegarde stockée",
+  "storage.count_other": "{{count}} sauvegardes stockées",
+  "storage.clear": "Supprimer toutes les sauvegardes stockées",
+  "storage.empty": "Aucune sauvegarde stockée",
 
   "common.error": "Erreur"
 }

@@ -2,13 +2,38 @@
 	import { parseJWLibrary } from '@jw-notes-sync/core';
 	import { webAdapter } from '$lib/adapter';
 	import { appState, type ImportedBackup } from '$lib/stores/app.svelte';
-	import { Upload, X, Loader, Eye, FlaskConical } from 'lucide-svelte';
+	import { Upload, X, Loader, Eye, FlaskConical, RotateCcw } from 'lucide-svelte';
 	import { t, getLocale } from '$lib/i18n.svelte';
+	import { formatBytes } from '$lib/format';
 
 	let dragging = $state(false);
 	let loading = $state(false);
 	let loadingSamples = $state(false);
+	let restoringId = $state<string | null>(null);
 	let error = $state<string | null>(null);
+
+	// Recent files not already loaded
+	const availableRecent = $derived(
+		appState.recentFiles.filter(
+			(meta) => !appState.backups.some((b) => b.id === meta.id),
+		),
+	);
+
+	async function restoreRecent(id: string) {
+		restoringId = id;
+		error = null;
+		try {
+			const ok = await appState.restoreBackup(
+				appState.recentFiles.find((m) => m.id === id)!,
+			);
+			if (!ok) error = t('import.error.generic');
+		} catch (err) {
+			error = err instanceof Error ? err.message : t('import.error.generic');
+		} finally {
+			restoringId = null;
+		}
+	}
+
 
 	async function handleFiles(files: FileList | null) {
 		if (!files) return;
@@ -40,7 +65,7 @@
 					},
 				};
 
-				appState.addBackup(backup);
+				appState.addBackup(backup, bytes);
 			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : t('import.error.generic');
@@ -114,7 +139,7 @@
 					},
 				};
 
-				appState.addBackup(backup);
+				appState.addBackup(backup, bytes);
 			}
 		} catch (err) {
 			error = err instanceof Error ? err.message : t('import.error.generic');
@@ -189,6 +214,44 @@
 				{t('import.trySample')}
 			{/if}
 		</button>
+	</div>
+{/if}
+
+<!-- Recent files -->
+{#if availableRecent.length > 0 && appState.backups.length === 0}
+	<div class="mb-8">
+		<h3 class="mb-3 text-sm font-semibold uppercase tracking-wider" style="color: var(--text-tertiary);">
+			{t('import.recentFiles')}
+		</h3>
+		<div class="flex flex-col gap-2">
+			{#each availableRecent as meta}
+				<div
+					class="flex items-center gap-3 rounded-lg border px-4 py-3"
+					style="background: var(--surface-1); border-color: var(--border);"
+				>
+					<div class="min-w-0 flex-1">
+						<div class="truncate text-sm font-medium">{meta.deviceName}</div>
+						<div class="text-xs" style="color: var(--text-tertiary);">
+							{meta.fileName} · {formatBytes(meta.sizeBytes)}
+						</div>
+					</div>
+					<button
+						class="flex shrink-0 items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all"
+						style="background: var(--accent); color: var(--accent-text);"
+						onclick={() => restoreRecent(meta.id)}
+						disabled={restoringId === meta.id}
+					>
+						{#if restoringId === meta.id}
+							<Loader size={12} class="animate-spin" />
+							{t('import.recentFiles.restoring')}
+						{:else}
+							<RotateCcw size={12} />
+							{t('import.recentFiles.restore')}
+						{/if}
+					</button>
+				</div>
+			{/each}
+		</div>
 	</div>
 {/if}
 

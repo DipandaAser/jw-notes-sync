@@ -138,6 +138,9 @@
   "history.result": "Result",
   "history.clear": "Clear history",
 
+  "import.recentFiles": "Recent files",
+  "import.recentFiles.restore": "Restore",
+  "import.recentFiles.restoring": "Restoring…",
   "import.trySample": "Try with sample data",
   "import.trySample.loading": "Loading samples…",
 
@@ -167,6 +170,13 @@
   "help.faq.devices.a": "Currently, you can merge 2 backups at a time. To merge 3+ devices, merge the first two, then merge that result with the third backup.",
   "help.faq.conflict.q": "What happens when the same note is different on two devices?",
   "help.faq.conflict.a": "By default, both versions are kept and concatenated with device labels. You can change this in the merge settings to keep only the newest version or prefer one device.",
+
+  "storage.title": "Storage",
+  "storage.used": "{{used}} of {{quota}} used",
+  "storage.count_one": "{{count}} stored backup",
+  "storage.count_other": "{{count}} stored backups",
+  "storage.clear": "Clear all stored backups",
+  "storage.empty": "No stored backups",
 
   "common.error": "Error"
 }
