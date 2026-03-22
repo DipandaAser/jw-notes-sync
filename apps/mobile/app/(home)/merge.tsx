@@ -30,9 +30,14 @@ export default function MergeScreen() {
     const parent = navigation.getParent()
     parent?.setOptions({ tabBarStyle: { display: 'none' } })
     return () => {
-      parent?.setOptions({ tabBarStyle: undefined })
+      parent?.setOptions({
+        tabBarStyle: {
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
+        },
+      })
     }
-  }, [navigation])
+  }, [navigation, colors])
 
   useEffect(() => {
     if (mergeStatus === 'done') {

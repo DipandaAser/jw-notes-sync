@@ -27,9 +27,14 @@ export default function ExportScreen() {
     const parent = navigation.getParent()
     parent?.setOptions({ tabBarStyle: { display: "none" } })
     return () => {
-      parent?.setOptions({ tabBarStyle: undefined })
+      parent?.setOptions({
+        tabBarStyle: {
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
+        },
+      })
     }
-  }, [navigation])
+  }, [navigation, colors])
 
   const mergeResult = useAppStore((s) => s.mergeResult)
   const archiveBytes = useAppStore((s) => s.archiveBytes)
