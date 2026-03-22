@@ -2,7 +2,9 @@
   "name": "jw-notes-sync",
   "private": true,
   "scripts": {
-    "dev": "pnpm --filter @jw-notes-sync/web dev",
+    "dev": "pnpm --filter @jw-notes-sync/web dev --host && pnpm --filter @jw-notes-sync/mobile start",
+    "web": "pnpm --filter @jw-notes-sync/web dev --host",
+    "mobile": "pnpm --filter @jw-notes-sync/mobile start",
     "build": "pnpm --filter @jw-notes-sync/core build && pnpm --filter @jw-notes-sync/web build",
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
