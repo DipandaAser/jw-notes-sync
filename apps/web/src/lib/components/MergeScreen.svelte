@@ -238,6 +238,15 @@
 			>
 				{appState.dryRun ? t('config.dryRun') : t('merge.button')}
 			</button>
+			<div class="mt-3">
+				<button
+					class="text-sm font-medium transition-all"
+					style="color: var(--text-tertiary);"
+					onclick={() => appState.reset()}
+				>
+					{t('common.cancel')}
+				</button>
+			</div>
 		</div>
 	{:else if appState.mergeStatus === 'merging'}
 		<!-- Progress -->

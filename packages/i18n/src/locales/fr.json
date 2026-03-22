@@ -194,5 +194,6 @@
   "storage.clear": "Supprimer toutes les sauvegardes stockées",
   "storage.empty": "Aucune sauvegarde stockée",
 
+  "common.cancel": "Annuler",
   "common.error": "Erreur"
 }

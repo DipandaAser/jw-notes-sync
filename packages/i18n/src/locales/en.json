@@ -194,5 +194,6 @@
   "storage.clear": "Clear all stored backups",
   "storage.empty": "No stored backups",
 
+  "common.cancel": "Cancel",
   "common.error": "Error"
 }
