@@ -300,6 +300,11 @@ class AppState {
   startQuickMerge() {
     this.backups = [];
     this.mergeMode = 'quick';
+    this.mergeStatus = 'idle';
+    this.mergeResult = null;
+    this.mergeError = null;
+    this.archiveBytes = null;
+    this.mergeProgress = { step: '', percent: 0, steps: [] };
     this.goTo('import');
   }
 
