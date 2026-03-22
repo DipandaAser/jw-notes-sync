@@ -55,9 +55,6 @@
 	}
 
 	const originals = $derived(appState.recentFiles.filter((m) => !m.isMerged));
-	const mergedFiles = $derived(
-		appState.recentFiles.filter((m) => m.isMerged && !m.isSourceOfTruth)
-	);
 	async function downloadTruth() {
 		if (!appState.sourceOfTruth || loadingTruth) return;
 		loadingTruth = true;
@@ -223,46 +220,3 @@
 	</div>
 {/if}
 
-<!-- Older merged files -->
-{#if mergedFiles.length > 0}
-	<h2
-		class="mb-3 text-sm font-semibold uppercase tracking-wider"
-		style="color: var(--text-tertiary);"
-	>
-		{t('library.merged')}
-	</h2>
-	<div class="mb-8 flex flex-col gap-2">
-		{#each mergedFiles as meta}
-			<div
-				class="rounded-xl border p-4"
-				style="background: var(--surface-1); border-color: var(--border);"
-			>
-				<div class="mb-1 flex items-center gap-2">
-					<Merge size={16} style="color: var(--accent);" />
-					<span class="min-w-0 flex-1 truncate text-sm font-semibold">{meta.deviceName}</span>
-					<span class="text-xs" style="color: var(--text-tertiary);">{formatDate(meta.date)}</span>
-					<span
-						class="shrink-0 rounded px-2 py-0.5 text-xs font-semibold"
-						style="background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent);"
-					>
-						{t('library.badge.merged')}
-					</span>
-				</div>
-				<div class="mb-3 text-xs" style="color: var(--text-tertiary);">
-					{meta.fileName} · {formatBytes(meta.sizeBytes)}
-				</div>
-				<div class="flex flex-wrap gap-2">
-					{#each [{ count: meta.stats.notes, label: t('stats.notes'), color: 'var(--stat-1)' }, { count: meta.stats.highlights, label: t('stats.highlights'), color: 'var(--stat-2)' }, { count: meta.stats.bookmarks, label: t('stats.bookmarks'), color: 'var(--stat-3)' }, { count: meta.stats.tags, label: t('stats.tags'), color: 'var(--stat-4)' }] as stat}
-						<span
-							class="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium"
-							style="background: color-mix(in srgb, {stat.color} 15%, transparent); color: {stat.color};"
-						>
-							<span class="font-bold">{stat.count}</span>
-							{stat.label}
-						</span>
-					{/each}
-				</div>
-			</div>
-		{/each}
-	</div>
-{/if}
