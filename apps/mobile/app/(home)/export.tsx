@@ -10,7 +10,7 @@ import { useLayoutEffect } from "react"
 import { useRouter, useNavigation } from "expo-router"
 import { File, Paths } from "expo-file-system"
 import * as Sharing from "expo-sharing"
-import { Share2, RefreshCw } from "lucide-react-native"
+import { Share2, RefreshCw, Eye, Star } from "lucide-react-native"
 import { useTranslation } from "react-i18next"
 import { useAppStore } from "../../src/stores/app"
 import { getColors } from "../../src/theme"
@@ -27,12 +27,19 @@ export default function ExportScreen() {
     const parent = navigation.getParent()
     parent?.setOptions({ tabBarStyle: { display: "none" } })
     return () => {
-      parent?.setOptions({ tabBarStyle: undefined })
+      parent?.setOptions({
+        tabBarStyle: {
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
+        },
+      })
     }
-  }, [navigation])
+  }, [navigation, colors])
 
   const mergeResult = useAppStore((s) => s.mergeResult)
   const archiveBytes = useAppStore((s) => s.archiveBytes)
+  const mergeMode = useAppStore((s) => s.mergeMode)
+  const openExplorer = useAppStore((s) => s.openExplorer)
   const reset = useAppStore((s) => s.reset)
 
   async function handleExport() {
@@ -63,7 +70,11 @@ export default function ExportScreen() {
 
   function handleNewMerge() {
     reset()
-    router.dismissTo("/(home)/")
+    if (mergeMode === 'library') {
+      router.dismissTo("/(home)/library")
+    } else {
+      router.dismissTo("/(home)/")
+    }
   }
 
   if (!mergeResult) {
@@ -92,6 +103,12 @@ export default function ExportScreen() {
       <Text style={[styles.subtitle, { color: colors.textMuted }]}>
         {t("export.subtitle")}
       </Text>
+      {mergeMode === 'library' && (
+        <View style={styles.truthBadge}>
+          <Star size={14} color={colors.primary} />
+          <Text style={[styles.truthBadgeText, { color: colors.primary }]}>{t("export.savedAsTruth")}</Text>
+        </View>
+      )}
 
       <View
         style={[
@@ -141,21 +158,25 @@ export default function ExportScreen() {
         </Pressable>
 
         <Pressable
-          style={[
-            styles.button,
-            {
-              backgroundColor: colors.card,
-              borderColor: colors.border,
-              borderWidth: 1,
-            },
-          ]}
+          style={[styles.button, { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }]}
+          onPress={() => {
+            openExplorer(mergeResult.contents, t("explorer.mergedData"))
+            router.push("/(home)/explorer")
+          }}
+        >
+          <View style={styles.exportButtonContent}>
+            <Eye color={colors.primary} size={16} />
+            <Text style={[styles.buttonText, { color: colors.primary }]}>{t("explorer.exploreResult")}</Text>
+          </View>
+        </Pressable>
+
+        <Pressable
+          style={[styles.button, { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }]}
           onPress={handleNewMerge}
         >
           <View style={styles.exportButtonContent}>
             <RefreshCw color={colors.text} size={16} />
-            <Text style={[styles.buttonText, { color: colors.text }]}>
-              {t("export.newMerge")}
-            </Text>
+            <Text style={[styles.buttonText, { color: colors.text }]}>{mergeMode === 'library' ? t("export.backToLibrary") : t("export.newMerge")}</Text>
           </View>
         </Pressable>
       </View>
@@ -192,7 +213,17 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    marginBottom: 28,
+    marginBottom: 8,
+  },
+  truthBadge: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 6,
+    marginBottom: 20,
+  },
+  truthBadgeText: {
+    fontSize: 13,
+    fontWeight: "600" as const,
   },
   statsGrid: {
     flexDirection: "row",

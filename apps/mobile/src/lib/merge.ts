@@ -23,6 +23,7 @@ import {
 import i18next from 'i18next';
 import { nativeAdapter } from '../adapter';
 import { useAppStore, type MergeResult } from '../stores/app';
+import { saveMergedBackup } from './storage';
 
 const MERGE_STEP_KEYS = [
   'steps.locations',
@@ -53,6 +54,7 @@ function updateProgress(stepIndex: number) {
 
 export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryArchive): Promise<void> {
   const store = useAppStore.getState();
+  const mergeConfig = store.mergeConfig;
   store.setMergeStatus('merging');
   store.setMergeError(null);
 
@@ -70,12 +72,12 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
 
     // Step 1: UserMarks + BlockRanges
     updateProgress(1);
-    const { merged: userMarks, winners } = mergeUserMarks(a.userMarks, b.userMarks, idMapA, idMapB);
+    const { merged: userMarks, winners } = mergeUserMarks(a.userMarks, b.userMarks, idMapA, idMapB, { strategy: mergeConfig.highlights });
     const blockRanges = mergeBlockRanges(a.blockRanges, b.blockRanges, idMapA, idMapB, winners);
 
     // Step 2: Notes
     updateProgress(2);
-    const notes = mergeNotes(a.notes, b.notes, idMapA, idMapB, { deviceNameA, deviceNameB });
+    const notes = mergeNotes(a.notes, b.notes, idMapA, idMapB, { deviceNameA, deviceNameB, strategy: mergeConfig.notes });
 
     // Step 3: Bookmarks
     updateProgress(3);
@@ -99,7 +101,7 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
 
     // Step 6: InputFields
     updateProgress(6);
-    const inputFields = mergeInputFields(a.inputFields, b.inputFields, idMapA, idMapB, { deviceNameA, deviceNameB });
+    const inputFields = mergeInputFields(a.inputFields, b.inputFields, idMapA, idMapB, { deviceNameA, deviceNameB, strategy: mergeConfig.inputFields });
 
     const contents: DatabaseContents = {
       locations,
@@ -159,6 +161,34 @@ export async function runMerge(archiveA: JWLibraryArchive, archiveB: JWLibraryAr
       percent: 100,
       steps: MERGE_STEP_KEYS.map((key) => ({ name: t(key), status: 'done' })),
     });
+
+    // Save as source of truth in library mode
+    if (finalStore.mergeMode === 'library') {
+      const mergedId = `${Date.now()}-merged-${Math.random().toString(36).slice(2, 8)}`;
+      const now = new Date().toISOString().split('T')[0];
+      await saveMergedBackup(mergedId, archiveBytes, {
+        id: mergedId,
+        fileName: `MergedBackup_${now}.jwlibrary`,
+        deviceName: 'JW Notes Sync',
+        date: new Date().toISOString(),
+        stats: result.stats,
+        parentIds: finalStore.backups.map((b) => b.id),
+      });
+      await finalStore.refreshSourceOfTruth();
+      await finalStore.refreshStorage();
+    }
+
+    // Clear pending backups (merge succeeded)
+    useAppStore.setState({ pendingBackupIds: [] });
+
+    finalStore.addMergeHistory({
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      date: new Date().toISOString(),
+      sources: finalStore.backups.map((b) => ({ deviceName: b.deviceName, fileName: b.fileName })),
+      stats: result.stats,
+      config: { ...mergeConfig },
+    });
+
     finalStore.goTo('export');
   } catch (err) {
     const errStore = useAppStore.getState();

@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, Pressable, FlatList, Alert, useColorScheme } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Plus } from 'lucide-react-native';
+import { useRouter, Redirect } from 'expo-router';
+import { Plus, Eye } from 'lucide-react-native';
 import { useTranslation } from 'react-i18next';
 import { useAppStore } from '../../src/stores/app';
 import { pickAndImportBackup } from '../../src/lib/import';
@@ -14,12 +14,19 @@ export default function ImportScreen() {
   const isDark = colorScheme === 'dark';
   const colors = getColors(isDark);
 
+  const sourceOfTruth = useAppStore((s) => s.sourceOfTruth);
+  const mergeMode = useAppStore((s) => s.mergeMode);
   const backups = useAppStore((s) => s.backups);
   const removeBackup = useAppStore((s) => s.removeBackup);
   const canMerge = useAppStore((s) => s.canMerge);
   const goTo = useAppStore((s) => s.goTo);
-
+  const openExplorer = useAppStore((s) => s.openExplorer);
   const [importing, setImporting] = useState(false);
+
+  // Redirect to library if there's a source of truth and we're not in quick merge mode
+  if (sourceOfTruth && mergeMode !== 'quick') {
+    return <Redirect href="/(home)/library" />;
+  }
 
   function formatDate(iso: string): string {
     try {
@@ -95,8 +102,17 @@ export default function ImportScreen() {
             onLongPress={() => handleRemove(item.id)}
           >
             <View style={styles.cardHeader}>
-              <Text style={[styles.deviceName, { color: colors.text }]}>{item.deviceName}</Text>
+              <Text style={[styles.deviceName, { color: colors.text, flex: 1 }]}>{item.deviceName}</Text>
               <Text style={[styles.date, { color: colors.textMuted }]}>{formatDate(item.date)}</Text>
+              <Pressable
+                style={[styles.exploreBtn, { backgroundColor: colors.primary }]}
+                onPress={() => {
+                  openExplorer(item.archive.database, item.deviceName);
+                  router.push('/(home)/explorer');
+                }}
+              >
+                <Eye size={14} color="#fff" />
+              </Pressable>
             </View>
             <Text style={[styles.fileName, { color: colors.textMuted }]}>{item.fileName}</Text>
             <View style={styles.statsRow}>
@@ -221,6 +237,14 @@ const styles = StyleSheet.create({
   },
   badgeLabel: {
     fontSize: 11,
+  },
+  exploreBtn: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    marginLeft: 8,
   },
   mergeButton: {
     paddingVertical: 16,

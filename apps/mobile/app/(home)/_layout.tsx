@@ -17,6 +17,7 @@ export default function HomeLayout() {
         contentStyle: { backgroundColor: colors.bg },
       }}
     >
+      <Stack.Screen name="library" options={{ title: "JW Notes Sync", headerBackVisible: false }} />
       <Stack.Screen name="index" options={{ title: "JW Notes Sync" }} />
       <Stack.Screen
         name="merge"
@@ -30,6 +31,13 @@ export default function HomeLayout() {
         options={{
           title: t("export.title"),
           headerBackVisible: false,
+        }}
+      />
+      <Stack.Screen
+        name="explorer"
+        options={{
+          title: t("explorer.title"),
+          headerShown: false,
         }}
       />
     </Stack>
